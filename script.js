@@ -328,3 +328,19 @@ window.urbanFloodMemory = {
 console.log('🌧️ Urban Flood Memory cargado correctamente');
 console.log('Tema actual:', getCurrentTheme());
 console.log('Esquema de color:', getCurrentColorScheme());
+
+// ========================================
+// REGISTRO DE SERVICE WORKER (PWA)
+// ========================================
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('✅ Service Worker registrado:', registration.scope);
+            })
+            .catch((error) => {
+                console.log('❌ Error al registrar Service Worker:', error);
+            });
+    });
+}

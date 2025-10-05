@@ -158,7 +158,7 @@ function initializeMap() {
     layerGroups.microzone = L.layerGroup();
 
     // Control de capas
-    addLayerControl();
+    // addLayerControl(); // Removido - ahora todo se controla desde el slider temporal
 
     // Buscador de localidades
     addSearchControl();
@@ -227,50 +227,7 @@ function toggleFullscreen() {
     }
 }
 
-/**
- * Añade control de capas
- */
-function addLayerControl() {
-    const layerControl = L.Control.extend({
-        options: {
-            position: 'topright'
-        },
-        onAdd: function(map) {
-            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control layer-control-panel');
-
-            container.innerHTML = `
-                <div class="layer-control-header">Capas SAR</div>
-                <label class="layer-control-item">
-                    <input type="checkbox" id="layer-historical" checked>
-                    <span class="layer-label">
-                        <span class="layer-color" style="background: rgba(128, 128, 128, 0.5);"></span>
-                        Históricas (antes 2023)
-                    </span>
-                </label>
-                <label class="layer-control-item">
-                    <input type="checkbox" id="layer-recent" checked>
-                    <span class="layer-label">
-                        <span class="layer-color" style="background: rgba(66, 153, 225, 0.5);"></span>
-                        Recientes (2023+)
-                    </span>
-                </label>
-            `;
-
-            // Prevenir propagación de eventos del mapa
-            L.DomEvent.disableClickPropagation(container);
-
-            // Event listeners para los checkboxes
-            setTimeout(() => {
-                document.getElementById('layer-historical').addEventListener('change', toggleHistoricalLayer);
-                document.getElementById('layer-recent').addEventListener('change', toggleRecentLayer);
-            }, 100);
-
-            return container;
-        }
-    });
-
-    map.addControl(new layerControl());
-}
+// Control de capas removido - ahora todo se controla desde el slider temporal
 
 /**
  * Añade control de búsqueda (usando Leaflet-Geosearch)
@@ -388,6 +345,13 @@ function loadDataForCurrentZoom() {
     const config = LOD_CONFIG[lod];
     const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
 
+    // ZOOM MÁXIMO: Cargar TODOS los datos históricos predefinidos
+    if (lod === 'microzone' && layerGroups.microzone.getLayers().length === 0) {
+        console.log('🔍 ZOOM MÁXIMO: Cargando TODOS los datos históricos...');
+        loadAllHistoricalData();
+        return;
+    }
+
     console.log(`📊 Generando ${config.count} zonas de nivel ${lod} (zoom ${zoom})`);
 
     // Reiniciar cache de posiciones para este viewport
@@ -444,6 +408,37 @@ function loadDataForCurrentZoom() {
 
     // Aplicar transparencia temporal
     updateLayerOpacityByYear(currentYear);
+}
+
+/**
+ * Carga TODOS los datos históricos predefinidos (solo en zoom máximo)
+ */
+function loadAllHistoricalData() {
+    console.log('📦 Cargando 2,400 microzonas históricas de Lima...');
+
+    let totalLoaded = 0;
+
+    // Cargar todos los años de SAR_DATA
+    Object.keys(SAR_DATA).forEach(year => {
+        SAR_DATA[year].forEach(data => {
+            const polygon = createSARPolygon(data, parseInt(year));
+            layerGroups.microzone.addLayer(polygon);
+            totalLoaded++;
+        });
+    });
+
+    console.log(`✅ ${totalLoaded} microzonas históricas cargadas`);
+
+    // Mostrar la capa
+    if (!map.hasLayer(layerGroups.microzone)) {
+        map.addLayer(layerGroups.microzone);
+    }
+
+    // Aplicar transparencia temporal
+    updateLayerOpacityByYear(currentYear);
+
+    // Notificación al usuario
+    showTemporaryNotification(`${totalLoaded} zonas históricas cargadas`);
 }
 
 /**
@@ -733,27 +728,7 @@ function stopPolygonAnimation(polygon) {
     }
 }
 
-/**
- * Alterna visibilidad de capa histórica
- */
-function toggleHistoricalLayer(e) {
-    if (e.target.checked) {
-        map.addLayer(layerGroups.historical);
-    } else {
-        map.removeLayer(layerGroups.historical);
-    }
-}
-
-/**
- * Alterna visibilidad de capa reciente
- */
-function toggleRecentLayer(e) {
-    if (e.target.checked) {
-        map.addLayer(layerGroups.recent);
-    } else {
-        map.removeLayer(layerGroups.recent);
-    }
-}
+// Funciones de toggle de capas removidas - ahora todo se controla desde el slider temporal
 
 // ========================================
 // SLIDER TEMPORAL
