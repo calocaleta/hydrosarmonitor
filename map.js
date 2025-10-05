@@ -701,7 +701,12 @@ function createSARPolygon(data, year) {
     // humedad mínima → 0% opacidad (casi transparente)
     // 100% humedad (1.0) → 100% opacidad (completamente visible)
     const opacityRange = 1.0 - minHumidityThreshold;
-    const fillOpacity = opacityRange > 0 ? (data.intensity - minHumidityThreshold) / opacityRange : 1.0;
+    let fillOpacity = opacityRange > 0 ? (data.intensity - minHumidityThreshold) / opacityRange : 1.0;
+
+    // Si es humedad de suelo, ocultarla por defecto (fillOpacity = 0)
+    if (data.dataType === 'moisture') {
+        fillOpacity = 0;
+    }
 
     const polygon = L.polygon(data.coords, {
         color: color,
@@ -878,6 +883,25 @@ function initializeTimelineSlider() {
                         <span>100%</span>
                     </div>
                 </div>
+                <div class="data-type-filters">
+                    <div class="filter-header">
+                        <span>🔍 Mostrar datos</span>
+                    </div>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" id="show-flood" checked>
+                        <span class="checkbox-label">
+                            <span class="checkbox-icon">🌊</span>
+                            Inundación
+                        </span>
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" id="show-moisture">
+                        <span class="checkbox-label">
+                            <span class="checkbox-icon">💧</span>
+                            Humedad de suelo
+                        </span>
+                    </label>
+                </div>
             `;
 
             L.DomEvent.disableClickPropagation(container);
@@ -887,10 +911,14 @@ function initializeTimelineSlider() {
                 const slider = document.getElementById('timeline-slider');
                 const cumulativeToggle = document.getElementById('cumulative-toggle');
                 const humiditySlider = document.getElementById('humidity-slider');
+                const showFlood = document.getElementById('show-flood');
+                const showMoisture = document.getElementById('show-moisture');
 
                 slider.addEventListener('input', handleTimelineChange);
                 cumulativeToggle.addEventListener('click', toggleCumulativeMode);
                 humiditySlider.addEventListener('input', handleHumidityChange);
+                showFlood.addEventListener('change', toggleDataTypeVisibility);
+                showMoisture.addEventListener('change', toggleDataTypeVisibility);
             }, 100);
 
             return container;
@@ -926,6 +954,62 @@ function toggleCumulativeMode() {
 }
 
 /**
+ * Alterna la visibilidad de tipos de datos (inundación/humedad)
+ */
+function toggleDataTypeVisibility() {
+    const showFlood = document.getElementById('show-flood').checked;
+    const showMoisture = document.getElementById('show-moisture').checked;
+
+    const currentLOD = getLODLevel(map.getZoom());
+    let floodCount = 0;
+    let moistureCount = 0;
+    let hiddenCount = 0;
+
+    layerGroups[currentLOD].eachLayer(layer => {
+        if (layer.options && layer.options.dataType) {
+            const isFlood = layer.options.dataType === 'flood';
+            const isMoisture = layer.options.dataType === 'moisture';
+            const meetsThreshold = layer.options.baseIntensity >= minHumidityThreshold;
+
+            // Determinar si debe ser visible
+            const shouldShow = meetsThreshold && (
+                (isFlood && showFlood) ||
+                (isMoisture && showMoisture)
+            );
+
+            if (shouldShow) {
+                // Calcular opacidad normal
+                const opacityRange = 1.0 - minHumidityThreshold;
+                const fillOpacity = opacityRange > 0 ? (layer.options.baseIntensity - minHumidityThreshold) / opacityRange : 1.0;
+
+                layer.setStyle({
+                    fillOpacity: fillOpacity,
+                    opacity: 0
+                });
+
+                if (isFlood) floodCount++;
+                if (isMoisture) moistureCount++;
+            } else {
+                // Ocultar completamente
+                layer.setStyle({
+                    fillOpacity: 0,
+                    opacity: 0
+                });
+                hiddenCount++;
+            }
+        }
+    });
+
+    // Feedback visual
+    const messages = [];
+    if (showFlood) messages.push(`${floodCount} inundaciones`);
+    if (showMoisture) messages.push(`${moistureCount} humedad`);
+
+    const message = messages.length > 0 ? messages.join(' + ') : 'Sin datos visibles';
+    showTemporaryNotification(message);
+}
+
+/**
  * Maneja cambios en el slider de humedad
  * @param {Event} e - Evento del slider
  */
@@ -936,11 +1020,8 @@ function handleHumidityChange(e) {
     // Actualizar display del porcentaje
     document.getElementById('humidity-value').textContent = percentage + '%';
 
-    // Recargar todos los datos con el nuevo umbral
-    loadDataForCurrentZoom();
-
-    // Feedback visual
-    showTemporaryNotification(`Mostrando zonas con ≥${percentage}% de humedad`);
+    // Aplicar el nuevo umbral respetando los filtros de tipo de dato
+    toggleDataTypeVisibility();
 }
 
 /**
