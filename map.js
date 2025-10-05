@@ -17,10 +17,22 @@ let map;
 let layerGroups = {
     historical: null,
     recent: null,
-    prediction: null
+    prediction: null,
+    // Nuevas capas para diferentes niveles de zoom
+    regional: null,    // Zoom 6-10 (regiones grandes)
+    district: null,    // Zoom 11-13 (distritos medianos)
+    microzone: null    // Zoom 14+ (microzonas pequeñas)
 };
 let currentYear = MAP_CONFIG.timelineEnd; // Iniciar en 2025 para mostrar todos los datos
 let predictionMode = false;
+let currentZoomLevel = 11;
+
+// Configuración de niveles de detalle (LOD)
+const LOD_CONFIG = {
+    regional: { minZoom: 6, maxZoom: 10, size: 0.05, count: 20 },      // Áreas grandes: ~5km
+    district: { minZoom: 11, maxZoom: 13, size: 0.005, count: 50 },    // Áreas medianas: ~500m
+    microzone: { minZoom: 14, maxZoom: 18, size: 0.0002, count: 100 }  // Microzonas: ~20m
+};
 
 // Función para generar microzonas iniciales automáticamente
 function generateInitialMicrozones() {
@@ -131,10 +143,15 @@ function initializeMap() {
     // Control de fullscreen
     addFullscreenControl();
 
-    // Inicializar grupos de capas
-    layerGroups.historical = L.layerGroup().addTo(map);
-    layerGroups.recent = L.layerGroup().addTo(map);
+    // Inicializar grupos de capas (mantenemos historical/recent por compatibilidad)
+    layerGroups.historical = L.layerGroup();
+    layerGroups.recent = L.layerGroup();
     layerGroups.prediction = L.layerGroup();
+
+    // Nuevas capas LOD
+    layerGroups.regional = L.layerGroup();
+    layerGroups.district = L.layerGroup();
+    layerGroups.microzone = L.layerGroup();
 
     // Control de capas
     addLayerControl();
@@ -142,8 +159,11 @@ function initializeMap() {
     // Buscador de localidades
     addSearchControl();
 
-    // Cargar TODOS los datos históricos disponibles por defecto
-    loadAllSARData();
+    // Inicializar el zoom actual
+    currentZoomLevel = map.getZoom();
+
+    // Cargar datos según nivel de zoom inicial
+    loadDataForCurrentZoom();
 
     // Inicializar controles adicionales
     initializeTimelineSlider();
@@ -284,37 +304,122 @@ function addSearchControl() {
  */
 function addMapMovementListeners() {
     let moveTimeout;
+    let zoomTimeout;
 
-    // Evento cuando el usuario termina de mover el mapa
+    // Evento cuando el usuario termina de mover el mapa (pan)
     map.on('moveend', function() {
-        // Usar timeout para evitar múltiples llamadas
         clearTimeout(moveTimeout);
         moveTimeout = setTimeout(() => {
-            const center = map.getCenter();
-            const zoom = map.getZoom();
-
-            // Solo generar datos si el zoom es suficiente (nivel de detalle)
-            if (zoom >= 11) {
-                loadSARDataForViewport();
-            }
-        }, 500); // Esperar 500ms después de que termine el movimiento
+            loadDataForCurrentZoom();
+        }, 500);
     });
 
-    // También escuchar el evento de zoom
+    // Evento cuando cambia el zoom (más importante)
     map.on('zoomend', function() {
-        const zoom = map.getZoom();
+        const newZoom = map.getZoom();
+        const oldZoom = currentZoomLevel;
 
-        if (zoom >= 11) {
-            clearTimeout(moveTimeout);
-            moveTimeout = setTimeout(() => {
-                loadSARDataForViewport();
+        // Detectar si cambiamos de nivel LOD
+        const oldLOD = getLODLevel(oldZoom);
+        const newLOD = getLODLevel(newZoom);
+
+        currentZoomLevel = newZoom;
+
+        if (oldLOD !== newLOD) {
+            // Cambio de nivel de detalle: limpiar y recargar
+            console.log(`🔍 Cambio de LOD: ${oldLOD} → ${newLOD}`);
+            clearAllLayers();
+
+            clearTimeout(zoomTimeout);
+            zoomTimeout = setTimeout(() => {
+                loadDataForCurrentZoom();
             }, 300);
+        } else {
+            // Mismo nivel LOD: solo añadir más datos
+            clearTimeout(zoomTimeout);
+            zoomTimeout = setTimeout(() => {
+                loadDataForCurrentZoom();
+            }, 500);
         }
     });
 }
 
 /**
- * Carga datos SAR para el área visible actual del mapa
+ * Determina el nivel LOD según el zoom
+ * @param {number} zoom - Nivel de zoom
+ * @returns {string} Nivel LOD ('regional', 'district', o 'microzone')
+ */
+function getLODLevel(zoom) {
+    if (zoom >= LOD_CONFIG.microzone.minZoom) return 'microzone';
+    if (zoom >= LOD_CONFIG.district.minZoom) return 'district';
+    return 'regional';
+}
+
+/**
+ * Limpia todas las capas LOD
+ */
+function clearAllLayers() {
+    layerGroups.regional.clearLayers();
+    layerGroups.district.clearLayers();
+    layerGroups.microzone.clearLayers();
+
+    // Remover del mapa
+    if (map.hasLayer(layerGroups.regional)) map.removeLayer(layerGroups.regional);
+    if (map.hasLayer(layerGroups.district)) map.removeLayer(layerGroups.district);
+    if (map.hasLayer(layerGroups.microzone)) map.removeLayer(layerGroups.microzone);
+}
+
+/**
+ * Carga datos según el nivel de zoom actual
+ */
+function loadDataForCurrentZoom() {
+    const zoom = map.getZoom();
+    const lod = getLODLevel(zoom);
+    const bounds = map.getBounds();
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+    const latDiff = ne.lat - sw.lat;
+    const lngDiff = ne.lng - sw.lng;
+
+    const config = LOD_CONFIG[lod];
+    const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
+
+    console.log(`📊 Generando ${config.count} zonas de nivel ${lod} (zoom ${zoom})`);
+
+    // Generar polígonos según el nivel LOD
+    for (let i = 0; i < config.count; i++) {
+        const year = yearsToGenerate[Math.floor(Math.random() * yearsToGenerate.length)];
+        const type = year >= 2023 ? 'recent' : 'historical';
+        const intensity = 0.3 + Math.random() * 0.6;
+
+        // Posición aleatoria en viewport
+        const lat = sw.lat + Math.random() * latDiff;
+        const lng = sw.lng + Math.random() * lngDiff;
+
+        // Tamaño según nivel LOD con variación
+        const baseSize = config.size;
+        const size = baseSize * (0.7 + Math.random() * 0.6);
+
+        // Crear polígono
+        const coords = createMicrozonePolygon(lat, lng, size);
+        const data = { coords, intensity, type };
+        const polygon = createSARPolygon(data, year);
+
+        // Agregar a la capa LOD correspondiente
+        layerGroups[lod].addLayer(polygon);
+    }
+
+    // Mostrar solo la capa del nivel LOD actual
+    if (!map.hasLayer(layerGroups[lod])) {
+        map.addLayer(layerGroups[lod]);
+    }
+
+    // Aplicar transparencia temporal
+    updateLayerOpacityByYear(currentYear);
+}
+
+/**
+ * Carga datos SAR para el área visible actual del mapa (DEPRECATED - usar loadDataForCurrentZoom)
  */
 function loadSARDataForViewport() {
     const bounds = map.getBounds();
@@ -717,9 +822,12 @@ function updateLayerOpacityByYear(endYear) {
         }
     };
 
-    // Actualizar ambas capas
+    // Actualizar todas las capas (legacy y LOD)
     layerGroups.historical.eachLayer(updateLayer);
     layerGroups.recent.eachLayer(updateLayer);
+    layerGroups.regional.eachLayer(updateLayer);
+    layerGroups.district.eachLayer(updateLayer);
+    layerGroups.microzone.eachLayer(updateLayer);
 }
 
 // ========================================
