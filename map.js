@@ -826,9 +826,9 @@ function initializeTimelineSlider() {
 
             container.innerHTML = `
                 <div class="timeline-header">
-                    <button id="toggle-panel" class="toggle-panel-btn" title="Colapsar panel">
+                    <button id="toggle-panel" class="toggle-panel-btn" title="Minimizar panel">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="15 18 9 12 15 6"></polyline>
+                            <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </button>
                     <span class="timeline-icon">📅</span>
@@ -942,24 +942,24 @@ function toggleTimelinePanel() {
     const control = document.querySelector('.timeline-control');
 
     if (content.style.display === 'none') {
-        // Expandir
+        // Expandir (mostrar contenido) - Flecha hacia ABAJO
         content.style.display = 'block';
         summary.style.display = 'none';
         control.classList.remove('collapsed');
         toggleBtn.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="15 18 9 12 15 6"></polyline>
+                <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
         `;
-        toggleBtn.title = 'Colapsar panel';
+        toggleBtn.title = 'Minimizar panel';
     } else {
-        // Colapsar
+        // Minimizar (ocultar contenido) - Flecha hacia ARRIBA
         content.style.display = 'none';
         summary.style.display = 'block';
         control.classList.add('collapsed');
         toggleBtn.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 18 15 12 9 6"></polyline>
+                <polyline points="18 15 12 9 6 15"></polyline>
             </svg>
         `;
         toggleBtn.title = 'Expandir panel';
@@ -1909,22 +1909,24 @@ function navigateToEvent(eventIndex) {
         window.toggleDataTypeVisibility('moisture');
     }
 
-    // Ajustar slider de humedad si el evento tiene menor intensidad que el umbral actual
+    // Ajustar slider de humedad: 10% menos que el valor del evento
     const eventIntensity = event.intensity || 0;
-    if (eventIntensity < minHumidityThreshold) {
-        console.log(`📊 Ajustando umbral de humedad: ${(minHumidityThreshold * 100).toFixed(0)}% → ${(eventIntensity * 100).toFixed(0)}%`);
+    const targetThreshold = Math.max(0, eventIntensity - 0.1); // 10% menos, mínimo 0
 
-        minHumidityThreshold = eventIntensity;
+    if (targetThreshold < minHumidityThreshold) {
+        console.log(`📊 Ajustando umbral de humedad: ${(minHumidityThreshold * 100).toFixed(0)}% → ${(targetThreshold * 100).toFixed(0)}% (evento: ${(eventIntensity * 100).toFixed(0)}% - 10%)`);
+
+        minHumidityThreshold = targetThreshold;
 
         // Actualizar slider visual
         const humiditySlider = document.getElementById('humidity-slider');
         const humidityValue = document.getElementById('humidity-value');
 
         if (humiditySlider) {
-            humiditySlider.value = Math.round(eventIntensity * 100);
+            humiditySlider.value = Math.round(targetThreshold * 100);
         }
         if (humidityValue) {
-            humidityValue.textContent = Math.round(eventIntensity * 100) + '%';
+            humidityValue.textContent = Math.round(targetThreshold * 100) + '%';
         }
 
         // Recargar datos con nuevo umbral
@@ -2027,6 +2029,64 @@ function navigateToEvent(eventIndex) {
             'success'
         );
     }
+
+    // ==========================================
+    // PASO 3: BUSCAR Y ABRIR POPUP DEL POLÍGONO REAL
+    // ==========================================
+
+    // Esperar a que termine la animación de flyTo y se carguen los datos
+    setTimeout(() => {
+        // Buscar el polígono del evento en todas las capas
+        let eventPolygon = null;
+
+        // Iterar sobre todas las capas del mapa
+        map.eachLayer((layer) => {
+            if (layer instanceof L.Polygon && layer.options.year === event.year) {
+                // Verificar si las coordenadas coinciden
+                const layerLatLngs = layer.getLatLngs()[0];
+                if (layerLatLngs && layerLatLngs.length === event.coords.length) {
+                    // Comparar primera coordenada para identificación rápida
+                    const firstCoord = layerLatLngs[0];
+                    if (Math.abs(firstCoord.lat - event.coords[0][0]) < 0.0001 &&
+                        Math.abs(firstCoord.lng - event.coords[0][1]) < 0.0001) {
+                        eventPolygon = layer;
+                    }
+                }
+            }
+        });
+
+        // Si encontramos el polígono, abrirle el popup
+        if (eventPolygon && eventPolygon.getPopup()) {
+            eventPolygon.openPopup();
+            console.log('✅ Popup abierto en polígono del evento');
+        } else {
+            // Si no se encontró, crear popup independiente
+            console.log('⚠️ Polígono no encontrado, creando popup independiente');
+            const popupContent = `
+                <div class="sar-popup-minimal">
+                    <div class="popup-title">${event.name}</div>
+                    <div class="popup-humidity">
+                        <span class="popup-percentage">${(event.intensity * 100).toFixed(0)}%</span>
+                        <span class="popup-drop">${eventTypeIcon}</span>
+                    </div>
+                    <div class="popup-source">📊 ${event.source}</div>
+                    <div class="popup-year" style="background-color: ${isFloodEvent ? '#5B9AA9' : '#654321'};">
+                        ${event.year}
+                    </div>
+                </div>
+            `;
+
+            L.popup({
+                closeButton: true,
+                autoClose: false,
+                closeOnClick: false,
+                className: 'custom-popup'
+            })
+            .setLatLng([centerLat, centerLng])
+            .setContent(popupContent)
+            .openOn(map);
+        }
+    }, 1700); // Esperar a que termine flyTo + pequeño margen para carga de datos
 }
 
 // Exponer funciones globalmente
