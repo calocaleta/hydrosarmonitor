@@ -42,82 +42,44 @@ const LOD_CONFIG = {
 // Cache de posiciones por año para evitar superposición
 let positionCache = {};
 
-// Función para generar microzonas iniciales automáticamente
-function generateInitialMicrozones() {
-    const zones = {
-        2015: [],
-        2018: [],
-        2020: [],
-        2023: [],
-        2024: [],
-        2025: []
-    };
+// NOTA: Función generateInitialMicrozones() ELIMINADA
+// La aplicación ahora solo usa datos reales verificados de:
+// - real-flood-data.js (eventos históricos documentados)
+// - nasa-earthdata-api.js (datos de Sentinel-1 SAR)
+// No se generan datos aleatorios de demostración
 
-    // Áreas de Lima donde generar microzonas (distritos vulnerables)
-    const limaAreas = [
-        { name: 'San Juan de Lurigancho', lat: -12.0050, lng: -77.0050 },
-        { name: 'Villa El Salvador', lat: -12.2050, lng: -76.9350 },
-        { name: 'Comas', lat: -11.9380, lng: -77.0460 },
-        { name: 'Ate', lat: -12.0450, lng: -76.9550 },
-        { name: 'San Martín de Porres', lat: -12.0050, lng: -77.0850 },
-        { name: 'Chorrillos', lat: -12.1650, lng: -77.0150 },
-        { name: 'Los Olivos', lat: -11.9920, lng: -77.0640 },
-        { name: 'Independencia', lat: -11.9920, lng: -77.0540 },
-        { name: 'Villa María del Triunfo', lat: -12.1650, lng: -76.9350 },
-        { name: 'Puente Piedra', lat: -11.8650, lng: -77.0750 },
-        { name: 'Carabayllo', lat: -11.8750, lng: -77.0350 },
-        { name: 'Lurigancho-Chosica', lat: -11.9450, lng: -76.8550 },
-        { name: 'Rímac', lat: -12.0250, lng: -77.0450 },
-        { name: 'El Agustino', lat: -12.0450, lng: -77.0150 },
-        { name: 'Santa Anita', lat: -12.0550, lng: -76.9750 },
-        { name: 'La Victoria', lat: -12.0650, lng: -77.0250 }
-    ];
+// Datos SAR (solo datos reales verificados)
+let SAR_DATA;
 
-    // Generar microzonas para cada año
-    Object.keys(zones).forEach(year => {
-        const yearNum = parseInt(year);
-        const type = yearNum >= 2023 ? 'recent' : 'historical';
-        const numZonesPerArea = 30; // 30 microzonas por área (16 áreas × 30 × 5 años = 2400 microzonas iniciales)
-
-        limaAreas.forEach(area => {
-            for (let i = 0; i < numZonesPerArea; i++) {
-                // Offset aleatorio dentro del distrito (500m radius)
-                const offset = 0.005;
-                const lat = area.lat + (Math.random() - 0.5) * offset * 2;
-                const lng = area.lng + (Math.random() - 0.5) * offset * 2;
-
-                // Tamaño ultra pequeño (5-30 metros)
-                const size = 0.00005 + Math.random() * 0.00025;
-
-                // Generar intensidad con distribución sesgada hacia valores altos
-                const intensityRoll = Math.random();
-                const intensity = intensityRoll < 0.7 ? 0.6 + Math.random() * 0.4 : 0.3 + Math.random() * 0.3;
-
-                // Determinar tipo de dato: 60% inundación, 40% humedad de suelo
-                const dataType = Math.random() < 0.6 ? 'flood' : 'moisture';
-
-                // Crear polígono simple de 3-4 vértices
-                const numVert = Math.random() > 0.5 ? 3 : 4;
-                const coords = [];
-                for (let v = 0; v < numVert; v++) {
-                    const angle = (Math.PI * 2 * v) / numVert + Math.random() * 0.3;
-                    const dist = size * (0.8 + Math.random() * 0.4);
-                    coords.push([
-                        lat + Math.cos(angle) * dist,
-                        lng + Math.sin(angle) * dist
-                    ]);
-                }
-
-                zones[year].push({ coords, intensity, type, dataType });
+// Intentar cargar datos de NASA Earthdata API
+async function initializeSARData() {
+    if (window.NASA_EARTHDATA_API && window.NASA_EARTHDATA_API.loadNASAEarthdataFloodData) {
+        console.log('🛰️ Cargando datos de NASA Earthdata API...');
+        try {
+            SAR_DATA = await window.NASA_EARTHDATA_API.loadNASAEarthdataFloodData();
+            console.log(`✅ Datos de NASA cargados: ${Object.values(SAR_DATA).reduce((sum, arr) => sum + arr.length, 0)} eventos`);
+        } catch (error) {
+            console.error('❌ Error cargando datos de NASA Earthdata:', error);
+            // Fallback solo a datos históricos (NO datos aleatorios)
+            if (window.REAL_FLOOD_DATA) {
+                SAR_DATA = window.REAL_FLOOD_DATA;
+                console.log('⚠️ Usando solo datos históricos verificados');
+            } else {
+                SAR_DATA = {};
+                console.warn('⚠️ No hay datos disponibles');
             }
-        });
-    });
-
-    return zones;
+        }
+    } else if (window.REAL_FLOOD_DATA) {
+        console.log('✅ Módulo NASA no disponible, usando datos históricos verificados');
+        SAR_DATA = window.REAL_FLOOD_DATA;
+    } else {
+        console.error('❌ No hay datos reales disponibles');
+        SAR_DATA = {};
+    }
 }
 
-// Generar datos SAR con microzonas automáticamente
-const SAR_DATA = generateInitialMicrozones();
+// Inicializar con datos históricos por defecto (se actualizarán con NASA en background)
+SAR_DATA = window.REAL_FLOOD_DATA || {};
 
 // Datos de predicción (zonas de riesgo)
 const PREDICTION_DATA = [
@@ -767,6 +729,10 @@ function createSARPolygon(data, year) {
     // Color de fondo del año en el popup (usa el mismo color que el polígono)
     const yearBgColor = color;
 
+    // Determinar si hay fuente de datos verificada
+    const hasVerifiedSource = data.verified === true && data.source;
+    const sourceText = hasVerifiedSource ? `<div class="popup-source">📊 ${data.source}</div>` : '';
+
     // Popup con diseño minimalista
     const popupContent = `
         <div class="sar-popup-minimal">
@@ -774,6 +740,7 @@ function createSARPolygon(data, year) {
                 <span class="popup-percentage">${(data.intensity * 100).toFixed(0)}%</span>
                 <span class="popup-drop">${icon}</span>
             </div>
+            ${sourceText}
             <div class="popup-year" style="background-color: ${yearBgColor};">
                 ${year}
             </div>
@@ -1525,12 +1492,491 @@ window.centerMapOnCity = async function(cityName) {
 };
 
 // Esperar a que el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    // Verificar que el contenedor del mapa existe
-    if (document.getElementById('map-container')) {
-        initializeMap();
+// ========================================
+// LOADING MANAGER
+// ========================================
+
+const LoadingManager = {
+    startTime: Date.now(),
+    elements: {},
+
+    init() {
+        this.elements.screen = document.getElementById('loading-screen');
+        this.elements.status = document.getElementById('loading-status');
+        this.elements.timer = document.getElementById('loading-timer');
+        this.elements.progress = document.getElementById('loading-progress');
+        this.elements.details = document.getElementById('loading-details');
+
+        // Iniciar timer
+        this.updateTimer();
+    },
+
+    updateTimer() {
+        if (!this.elements.screen || this.elements.screen.classList.contains('hidden')) return;
+
+        const elapsed = ((Date.now() - this.startTime) / 1000).toFixed(1);
+        if (this.elements.timer) {
+            this.elements.timer.textContent = `${elapsed}s`;
+        }
+
+        requestAnimationFrame(() => this.updateTimer());
+    },
+
+    setStatus(message) {
+        if (this.elements.status) {
+            this.elements.status.textContent = message;
+        }
+        console.log(`🔄 ${message}`);
+    },
+
+    setProgress(percent) {
+        if (this.elements.progress) {
+            this.elements.progress.style.width = `${percent}%`;
+        }
+    },
+
+    addStep(message, isSuccess = false, isError = false) {
+        if (this.elements.details) {
+            const step = document.createElement('p');
+            step.className = 'loading-step';
+            if (isSuccess) step.classList.add('success');
+            if (isError) step.classList.add('error');
+            step.textContent = message;
+            this.elements.details.appendChild(step);
+
+            // Mantener solo últimos 4 pasos
+            const steps = this.elements.details.querySelectorAll('.loading-step');
+            if (steps.length > 4) {
+                steps[0].remove();
+            }
+        }
+    },
+
+    hide() {
+        const totalTime = ((Date.now() - this.startTime) / 1000).toFixed(1);
+        console.log(`✅ Carga completada en ${totalTime}s`);
+
+        if (this.elements.screen) {
+            this.elements.screen.classList.add('hidden');
+        }
     }
+};
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Inicializar loading manager
+    LoadingManager.init();
+    LoadingManager.setStatus('Inicializando aplicación...');
+    LoadingManager.setProgress(10);
+
+    // Verificar que el contenedor del mapa existe
+    if (!document.getElementById('map-container')) {
+        console.error('❌ Contenedor del mapa no encontrado');
+        return;
+    }
+
+    // PASO 1: Cargar datos históricos inmediatamente (no bloqueante)
+    LoadingManager.addStep('✅ Datos históricos verificados cargados', true);
+    LoadingManager.setProgress(30);
+
+    // PASO 2: Inicializar mapa con datos históricos
+    LoadingManager.setStatus('Inicializando mapa interactivo...');
+    LoadingManager.addStep('🗺️ Renderizando mapa de Leaflet...');
+
+    // Usar solo datos históricos inicialmente
+    if (window.REAL_FLOOD_DATA) {
+        SAR_DATA = window.REAL_FLOOD_DATA;
+        const historicalCount = Object.values(SAR_DATA).reduce((sum, arr) => sum + arr.length, 0);
+        console.log(`✅ Usando datos históricos verificados (${historicalCount} eventos)`);
+
+        // Actualizar badge de estado
+        updateDataStatusBadge(historicalCount, null);
+    } else {
+        SAR_DATA = {}; // Vacío si no hay datos reales
+        console.warn('⚠️ No hay datos históricos disponibles');
+        updateDataStatusBadge(0, null);
+    }
+
+    // Inicializar el mapa (rápido)
+    initializeMap();
+    LoadingManager.addStep('✅ Mapa inicializado', true);
+    LoadingManager.setProgress(60);
+
+    // Inicializar tour de eventos históricos
+    initializeHistoricalEventsTour();
+    console.log('✅ Tour de eventos históricos inicializado');
+
+    // PASO 3: Cargar NASA API en background (NO bloqueante)
+    LoadingManager.setStatus('Conectando a NASA Earthdata...');
+    LoadingManager.addStep('🛰️ Consultando API de NASA en segundo plano...');
+
+    // Cargar NASA en paralelo SIN await (background)
+    initializeSARData().then(() => {
+        LoadingManager.addStep('✅ Datos de NASA cargados', true);
+        LoadingManager.setProgress(90);
+
+        // Recargar datos del mapa con información de NASA
+        console.log('🔄 Actualizando mapa con datos de NASA...');
+        loadDataForCurrentZoom();
+
+        // Contar eventos
+        const totalCount = Object.values(SAR_DATA).reduce((sum, arr) => sum + arr.length, 0);
+        const historicalCount = window.REAL_FLOOD_DATA ?
+            Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
+        const nasaCount = totalCount - historicalCount;
+
+        // Actualizar badge de estado
+        updateDataStatusBadge(historicalCount, nasaCount);
+
+        // Mostrar notificación de éxito
+        if (window.showNotification) {
+            window.showNotification(`✅ Datos de NASA cargados: ${nasaCount} eventos adicionales`, 'success');
+        }
+    }).catch(error => {
+        console.error('❌ Error cargando datos de NASA:', error);
+        LoadingManager.addStep('⚠️ NASA API no disponible, usando solo datos históricos', false, true);
+
+        // Actualizar badge con error
+        const historicalCount = window.REAL_FLOOD_DATA ?
+            Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
+        updateDataStatusBadge(historicalCount, 0, true);
+    });
+
+    // PASO 4: Ocultar loading screen (mapa ya está listo)
+    setTimeout(() => {
+        LoadingManager.setStatus('¡Listo!');
+        LoadingManager.setProgress(100);
+        LoadingManager.addStep('✅ Aplicación lista para usar', true);
+
+        setTimeout(() => {
+            LoadingManager.hide();
+        }, 500);
+    }, 800);
 });
+
+// ========================================
+// DATA STATUS BADGE UPDATER
+// ========================================
+
+/**
+ * Actualiza el badge de estado de datos
+ * @param {number} historicalCount - Número de eventos históricos
+ * @param {number|null} nasaCount - Número de eventos de NASA (null si aún no se cargó)
+ * @param {boolean} nasaError - Si hubo error cargando NASA
+ */
+function updateDataStatusBadge(historicalCount, nasaCount, nasaError = false) {
+    const historicalIcon = document.getElementById('status-icon-historical');
+    const historicalCountEl = document.getElementById('status-count-historical');
+    const nasaIcon = document.getElementById('status-icon-nasa');
+    const nasaCountEl = document.getElementById('status-count-nasa');
+
+    // Actualizar datos históricos
+    if (historicalCountEl) {
+        historicalCountEl.textContent = historicalCount;
+    }
+    if (historicalIcon) {
+        historicalIcon.textContent = historicalCount > 0 ? '🟢' : '🔴';
+    }
+
+    // Actualizar datos de NASA
+    if (nasaCount === null) {
+        // Aún cargando
+        if (nasaIcon) nasaIcon.textContent = '🟡';
+        if (nasaCountEl) nasaCountEl.textContent = 'Cargando...';
+    } else if (nasaError) {
+        // Error - pero la app funciona con datos históricos
+        if (nasaIcon) nasaIcon.textContent = '🔴';
+        if (nasaCountEl) {
+            nasaCountEl.textContent = 'No disponible';
+            nasaCountEl.title = 'API de NASA no disponible. Usando solo datos históricos verificados.';
+        }
+    } else {
+        // Cargado exitosamente
+        if (nasaIcon) nasaIcon.textContent = nasaCount > 0 ? '🟢' : '🟡';
+        if (nasaCountEl) {
+            nasaCountEl.textContent = nasaCount;
+            nasaCountEl.title = `${nasaCount} eventos de Sentinel-1 SAR`;
+        }
+    }
+}
+
+// ========================================
+// HISTORICAL EVENTS DROPDOWN
+// ========================================
+
+let historicalEvents = [];
+let dropdownVisible = false;
+
+/**
+ * Inicializa el dropdown de eventos históricos
+ */
+function initializeHistoricalEventsTour() {
+    // Recopilar todos los eventos históricos verificados
+    historicalEvents = [];
+
+    if (window.REAL_FLOOD_DATA) {
+        Object.keys(window.REAL_FLOOD_DATA).forEach(year => {
+            window.REAL_FLOOD_DATA[year].forEach(event => {
+                if (event.verified && event.coords && event.coords.length > 0) {
+                    historicalEvents.push({
+                        year: year,
+                        name: event.name,
+                        coords: event.coords,
+                        intensity: event.intensity,
+                        source: event.source,
+                        dataType: event.dataType
+                    });
+                }
+            });
+        });
+    }
+
+    console.log(`📍 Eventos históricos: ${historicalEvents.length} eventos encontrados`);
+
+    // Crear dropdown
+    createHistoricalEventsDropdown();
+
+    // Agregar evento click al badge de históricos
+    const statusItem = document.getElementById('status-count-historical');
+    if (statusItem && historicalEvents.length > 0) {
+        statusItem.style.textDecoration = 'underline';
+
+        // Agregar clase clickable al contenedor
+        const historicalStatusDiv = statusItem.parentElement;
+        if (historicalStatusDiv) {
+            historicalStatusDiv.classList.add('clickable');
+            historicalStatusDiv.title = '🗺️ Ver lista de eventos históricos';
+            historicalStatusDiv.addEventListener('click', toggleHistoricalEventsDropdown);
+        }
+    }
+}
+
+/**
+ * Crea el dropdown de eventos históricos
+ */
+function createHistoricalEventsDropdown() {
+    // Crear contenedor del dropdown
+    const dropdown = document.createElement('div');
+    dropdown.id = 'historical-events-dropdown';
+    dropdown.className = 'historical-dropdown';
+    dropdown.style.display = 'none';
+
+    // Header del dropdown
+    const header = document.createElement('div');
+    header.className = 'dropdown-header';
+    header.innerHTML = `
+        <h3>📍 Eventos Históricos Verificados</h3>
+        <button class="dropdown-close" id="close-dropdown">×</button>
+    `;
+
+    // Lista de eventos
+    const list = document.createElement('div');
+    list.className = 'dropdown-list';
+
+    // Agrupar eventos por año
+    const eventsByYear = {};
+    historicalEvents.forEach((event, index) => {
+        if (!eventsByYear[event.year]) {
+            eventsByYear[event.year] = [];
+        }
+        eventsByYear[event.year].push({ ...event, index });
+    });
+
+    // Crear items agrupados por año
+    Object.keys(eventsByYear).sort((a, b) => b - a).forEach(year => {
+        // Header del año
+        const yearHeader = document.createElement('div');
+        yearHeader.className = 'dropdown-year-header';
+        yearHeader.innerHTML = `📅 ${year} (${eventsByYear[year].length} eventos)`;
+        list.appendChild(yearHeader);
+
+        // Eventos del año
+        eventsByYear[year].forEach(event => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.dataset.index = event.index;
+
+            const icon = event.dataType === 'flood' ? '🌊' : '💧';
+            const intensityPercent = (event.intensity * 100).toFixed(0);
+
+            item.innerHTML = `
+                <div class="dropdown-item-icon">${icon}</div>
+                <div class="dropdown-item-content">
+                    <div class="dropdown-item-name">${event.name}</div>
+                    <div class="dropdown-item-meta">
+                        <span class="dropdown-item-source">📊 ${event.source}</span>
+                        <span class="dropdown-item-intensity">${intensityPercent}%</span>
+                    </div>
+                </div>
+            `;
+
+            item.addEventListener('click', () => navigateToEvent(event.index));
+            list.appendChild(item);
+        });
+    });
+
+    dropdown.appendChild(header);
+    dropdown.appendChild(list);
+    document.body.appendChild(dropdown);
+
+    // Evento para cerrar dropdown
+    document.getElementById('close-dropdown').addEventListener('click', toggleHistoricalEventsDropdown);
+
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('historical-events-dropdown');
+        const statusItem = document.getElementById('status-count-historical');
+        if (dropdown && dropdownVisible &&
+            !dropdown.contains(e.target) &&
+            !statusItem?.parentElement?.contains(e.target)) {
+            toggleHistoricalEventsDropdown();
+        }
+    });
+}
+
+/**
+ * Muestra/oculta el dropdown de eventos históricos
+ */
+function toggleHistoricalEventsDropdown(event) {
+    if (event) {
+        event.stopPropagation();
+    }
+
+    const dropdown = document.getElementById('historical-events-dropdown');
+    if (!dropdown) return;
+
+    dropdownVisible = !dropdownVisible;
+
+    if (dropdownVisible) {
+        dropdown.style.display = 'block';
+        setTimeout(() => dropdown.classList.add('visible'), 10);
+    } else {
+        dropdown.classList.remove('visible');
+        setTimeout(() => dropdown.style.display = 'none', 300);
+    }
+}
+
+/**
+ * Navega a un evento específico y ajusta filtros para visualizarlo
+ */
+function navigateToEvent(eventIndex) {
+    if (eventIndex < 0 || eventIndex >= historicalEvents.length) {
+        console.error('Índice de evento inválido:', eventIndex);
+        return;
+    }
+
+    const event = historicalEvents[eventIndex];
+
+    // ==========================================
+    // PASO 1: AJUSTAR FILTROS PARA EL EVENTO
+    // ==========================================
+
+    // Activar checkbox correspondiente según tipo de dato
+    const isFloodEvent = !event.dataType || event.dataType === 'flood';
+    const isMoistureEvent = event.dataType === 'moisture';
+
+    // Obtener checkboxes
+    const floodCheckbox = document.getElementById('show-flood');
+    const moistureCheckbox = document.getElementById('show-moisture');
+
+    if (isFloodEvent && floodCheckbox && !floodCheckbox.checked) {
+        console.log('✅ Activando filtro de Inundación');
+        floodCheckbox.checked = true;
+        showFloodData = true;
+        window.toggleDataTypeVisibility('flood');
+    }
+
+    if (isMoistureEvent && moistureCheckbox && !moistureCheckbox.checked) {
+        console.log('✅ Activando filtro de Humedad de Suelo');
+        moistureCheckbox.checked = true;
+        showMoistureData = true;
+        window.toggleDataTypeVisibility('moisture');
+    }
+
+    // Ajustar slider de humedad si el evento tiene menor intensidad que el umbral actual
+    const eventIntensity = event.intensity || 0;
+    if (eventIntensity < minHumidityThreshold) {
+        console.log(`📊 Ajustando umbral de humedad: ${(minHumidityThreshold * 100).toFixed(0)}% → ${(eventIntensity * 100).toFixed(0)}%`);
+
+        minHumidityThreshold = eventIntensity;
+
+        // Actualizar slider visual
+        const humiditySlider = document.getElementById('humidity-slider');
+        const humidityValue = document.getElementById('humidity-value');
+
+        if (humiditySlider) {
+            humiditySlider.value = Math.round(eventIntensity * 100);
+        }
+        if (humidityValue) {
+            humidityValue.textContent = Math.round(eventIntensity * 100) + '%';
+        }
+
+        // Recargar datos con nuevo umbral
+        loadDataForCurrentZoom();
+    }
+
+    // ==========================================
+    // PASO 2: NAVEGAR AL EVENTO
+    // ==========================================
+
+    // Calcular centro del polígono
+    let centerLat = 0;
+    let centerLng = 0;
+    event.coords.forEach(coord => {
+        centerLat += coord[0];
+        centerLng += coord[1];
+    });
+    centerLat /= event.coords.length;
+    centerLng /= event.coords.length;
+
+    // Cerrar dropdown
+    toggleHistoricalEventsDropdown();
+
+    // Ajustar año del timeline si es necesario
+    const timelineSlider = document.getElementById('year-slider');
+    if (timelineSlider && event.year) {
+        const eventYear = parseInt(event.year);
+        const currentTimelineYear = parseInt(timelineSlider.value);
+
+        // Si el año del evento es mayor al año actual del timeline, ajustarlo
+        if (eventYear > currentTimelineYear) {
+            console.log(`📅 Ajustando año del timeline: ${currentTimelineYear} → ${eventYear}`);
+            timelineSlider.value = eventYear;
+            currentYear = eventYear;
+
+            // Actualizar display del año
+            const yearDisplay = document.getElementById('current-year');
+            if (yearDisplay) {
+                yearDisplay.textContent = eventYear;
+            }
+
+            // Actualizar visibilidad de capas
+            updateLayerOpacityByYear(eventYear);
+        }
+    }
+
+    // Navegar al evento con animación
+    map.flyTo([centerLat, centerLng], 16, {
+        duration: 1.5,
+        easing: (t) => t * (2 - t)
+    });
+
+    // Mostrar notificación con información completa
+    console.log(`📍 Navegando a: ${event.name} (${event.year})`);
+
+    const eventTypeIcon = isFloodEvent ? '🌊' : '💧';
+    const eventTypeName = isFloodEvent ? 'Inundación' : 'Humedad de Suelo';
+
+    if (window.showNotification) {
+        window.showNotification(
+            `${eventTypeIcon} ${event.name}\n📅 ${event.year} | 📊 ${event.source}\n💧 ${(eventIntensity * 100).toFixed(0)}% | Tipo: ${eventTypeName}`,
+            'success'
+        );
+    }
+}
+
+// Exponer funciones globalmente
+window.navigateToHistoricalEvent = navigateToEvent;
+window.toggleHistoricalEventsDropdown = toggleHistoricalEventsDropdown;
 
 // Log de carga
 console.log('🗺️ Módulo de mapa cargado');

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test SAR Connection</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #00ff00;
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 10px;
+        }
+        .section {
+            background: #2a2a2a;
+            border: 1px solid #00ff00;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .success {
+            color: #00ff00;
+        }
+        .error {
+            color: #ff0000;
+        }
+        .warning {
+            color: #ffaa00;
+        }
+        .info {
+            color: #00aaff;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        .status.ok {
+            background: #00ff0033;
+            color: #00ff00;
+        }
+        .status.fail {
+            background: #ff000033;
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛰️ HydroSAR Monitor - Diagnóstico de Conexión SAR</h1>
+
+    <div class="section">
+        <h2>1. Verificación de Archivos</h2>
+        <div id="file-check"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Datos SAR Cargados</h2>
+        <div id="sar-data-check"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Conexión NASA Earthdata API</h2>
+        <button onclick="testNASAConnection()">Probar Conexión NASA</button>
+        <div id="nasa-check"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. Datos Históricos Verificados</h2>
+        <div id="real-data-check"></div>
+    </div>
+
+    <div class="section">
+        <h2>5. Estadísticas de Datos</h2>
+        <div id="stats"></div>
+    </div>
+
+    <script src="real-flood-data.js"></script>
+    <script src="nasa-earthdata-api.js"></script>
+
+    <script>
+        // 1. Verificar archivos cargados
+        function checkFiles() {
+            const fileCheck = document.getElementById('file-check');
+            let html = '';
+
+            // Verificar real-flood-data.js
+            if (typeof window.REAL_FLOOD_DATA !== 'undefined') {
+                html += '<p class="success">✅ real-flood-data.js cargado correctamente</p>';
+            } else {
+                html += '<p class="error">❌ real-flood-data.js NO cargado</p>';
+            }
+
+            // Verificar nasa-earthdata-api.js
+            if (typeof window.NASA_EARTHDATA_API !== 'undefined') {
+                html += '<p class="success">✅ nasa-earthdata-api.js cargado correctamente</p>';
+            } else {
+                html += '<p class="error">❌ nasa-earthdata-api.js NO cargado</p>';
+            }
+
+            fileCheck.innerHTML = html;
+        }
+
+        // 2. Verificar datos SAR
+        function checkSARData() {
+            const sarCheck = document.getElementById('sar-data-check');
+            let html = '';
+
+            if (typeof window.REAL_FLOOD_DATA !== 'undefined') {
+                const years = Object.keys(window.REAL_FLOOD_DATA);
+                html += `<p class="success">✅ Datos históricos disponibles para ${years.length} años: ${years.join(', ')}</p>`;
+
+                let totalEvents = 0;
+                years.forEach(year => {
+                    const events = window.REAL_FLOOD_DATA[year].length;
+                    totalEvents += events;
+                    html += `<p class="info">   📅 ${year}: ${events} eventos</p>`;
+                });
+
+                html += `<p class="warning"><strong>Total: ${totalEvents} eventos históricos verificados</strong></p>`;
+
+                // Mostrar primer evento como ejemplo
+                if (years.length > 0 && window.REAL_FLOOD_DATA[years[0]].length > 0) {
+                    const example = window.REAL_FLOOD_DATA[years[0]][0];
+                    html += '<p class="info">Ejemplo de evento:</p>';
+                    html += `<pre>${JSON.stringify(example, null, 2)}</pre>`;
+                }
+            } else {
+                html += '<p class="error">❌ No hay datos SAR disponibles</p>';
+            }
+
+            sarCheck.innerHTML = html;
+        }
+
+        // 3. Probar conexión NASA
+        async function testNASAConnection() {
+            const nasaCheck = document.getElementById('nasa-check');
+            nasaCheck.innerHTML = '<p class="warning">⏳ Probando conexión con NASA Earthdata API...</p>';
+
+            try {
+                if (typeof window.NASA_EARTHDATA_API === 'undefined') {
+                    throw new Error('Módulo NASA_EARTHDATA_API no cargado');
+                }
+
+                // Intentar cargar datos
+                const data = await window.NASA_EARTHDATA_API.loadNASAEarthdataFloodData();
+
+                let html = '<p class="success">✅ Conexión exitosa con NASA Earthdata API</p>';
+
+                // Contar eventos por año
+                const years = Object.keys(data);
+                html += `<p class="info">Datos obtenidos para ${years.length} años</p>`;
+
+                let totalEvents = 0;
+                years.forEach(year => {
+                    const events = data[year].length;
+                    totalEvents += events;
+                    html += `<p class="info">   📅 ${year}: ${events} eventos</p>`;
+                });
+
+                html += `<p class="warning"><strong>Total: ${totalEvents} eventos de NASA</strong></p>`;
+
+                nasaCheck.innerHTML = html;
+
+            } catch (error) {
+                nasaCheck.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+                console.error('Error completo:', error);
+            }
+        }
+
+        // 4. Verificar estructura de datos reales
+        function checkRealData() {
+            const realDataCheck = document.getElementById('real-data-check');
+            let html = '';
+
+            if (typeof window.REAL_FLOOD_DATA !== 'undefined') {
+                const years = Object.keys(window.REAL_FLOOD_DATA);
+
+                // Verificar estructura de datos
+                let hasVerified = 0;
+                let hasSource = 0;
+                let hasCoords = 0;
+
+                years.forEach(year => {
+                    window.REAL_FLOOD_DATA[year].forEach(event => {
+                        if (event.verified) hasVerified++;
+                        if (event.source) hasSource++;
+                        if (event.coords && event.coords.length > 0) hasCoords++;
+                    });
+                });
+
+                html += `<p class="success">✅ Eventos verificados: ${hasVerified}</p>`;
+                html += `<p class="success">✅ Eventos con fuente: ${hasSource}</p>`;
+                html += `<p class="success">✅ Eventos con coordenadas: ${hasCoords}</p>`;
+
+                // Listar fuentes únicas
+                const sources = new Set();
+                years.forEach(year => {
+                    window.REAL_FLOOD_DATA[year].forEach(event => {
+                        if (event.source) sources.add(event.source);
+                    });
+                });
+
+                html += `<p class="info">Fuentes de datos:</p>`;
+                html += '<ul>';
+                sources.forEach(source => {
+                    html += `<li class="info">${source}</li>`;
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="error">❌ No hay datos reales disponibles</p>';
+            }
+
+            realDataCheck.innerHTML = html;
+        }
+
+        // 5. Estadísticas generales
+        function showStats() {
+            const stats = document.getElementById('stats');
+            let html = '';
+
+            // Estadísticas de tipos de datos
+            if (typeof window.REAL_FLOOD_DATA !== 'undefined') {
+                const years = Object.keys(window.REAL_FLOOD_DATA);
+                let floodCount = 0;
+                let moistureCount = 0;
+                let totalIntensity = 0;
+                let eventCount = 0;
+
+                years.forEach(year => {
+                    window.REAL_FLOOD_DATA[year].forEach(event => {
+                        eventCount++;
+                        if (event.dataType === 'flood') floodCount++;
+                        if (event.dataType === 'moisture') moistureCount++;
+                        if (event.intensity) totalIntensity += event.intensity;
+                    });
+                });
+
+                const avgIntensity = eventCount > 0 ? (totalIntensity / eventCount * 100).toFixed(1) : 0;
+
+                html += `<p class="info">🌊 Eventos de inundación: ${floodCount}</p>`;
+                html += `<p class="info">💧 Eventos de humedad de suelo: ${moistureCount}</p>`;
+                html += `<p class="info">📊 Intensidad promedio: ${avgIntensity}%</p>`;
+                html += `<p class="info">📈 Total de eventos: ${eventCount}</p>`;
+            }
+
+            stats.innerHTML = html;
+        }
+
+        // Ejecutar verificaciones al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            checkFiles();
+            checkSARData();
+            checkRealData();
+            showStats();
+        });
+    </script>
+</body>
+</html>

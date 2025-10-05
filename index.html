@@ -39,6 +39,27 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">🛰️</div>
+            <h2 class="loading-title">HydroSAR Monitor</h2>
+            <div class="loading-spinner">
+                <div class="water-drop"></div>
+                <div class="water-drop"></div>
+                <div class="water-drop"></div>
+            </div>
+            <p class="loading-status" id="loading-status">Inicializando...</p>
+            <div class="loading-progress-bar">
+                <div class="loading-progress-fill" id="loading-progress"></div>
+            </div>
+            <p class="loading-timer" id="loading-timer">0.0s</p>
+            <div class="loading-details" id="loading-details">
+                <p class="loading-step">⏳ Cargando componentes...</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Gotas animadas de fondo -->
     <div class="rain-container">
         <div class="drop"></div>
@@ -97,6 +118,18 @@
                 Consulta si esta zona fue afectada por lluvias o inundaciones en los últimos 10 años.
             </p>
 
+            <!-- Data Status Badge -->
+            <div class="data-status-badge" id="data-status-badge">
+                <div class="status-item">
+                    <span class="status-icon" id="status-icon-historical">🟢</span>
+                    <span class="status-label">Históricos: <strong id="status-count-historical">-</strong></span>
+                </div>
+                <div class="status-item">
+                    <span class="status-icon" id="status-icon-nasa">🟡</span>
+                    <span class="status-label">NASA: <strong id="status-count-nasa">Cargando...</strong></span>
+                </div>
+            </div>
+
             <!-- Formulario de búsqueda -->
             <form class="search-form" id="searchForm">
                 <div class="input-group">
@@ -145,6 +178,8 @@
     <script src="https://unpkg.com/leaflet-geosearch@3.11.0/dist/geosearch.umd.js"></script>
 
     <!-- Scripts de la aplicación -->
+    <script src="real-flood-data.js"></script> <!-- Datos históricos verificados -->
+    <script src="nasa-earthdata-api.js"></script> <!-- API NASA Earthdata -->
     <script src="script.js"></script>
     <script src="map.js"></script>
     <script src="alerts.js"></script>
