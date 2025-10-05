@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Consulta el historial de lluvias e inundaciones en tu localidad">
+    <title>Urban Flood Memory - Explorador de Lluvias</title>
+
+    <!-- Fuente amigable de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin="" />
+
+    <!-- Leaflet Geosearch CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.11.0/dist/geosearch.css" />
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Gotas animadas de fondo -->
+    <div class="rain-container">
+        <div class="drop"></div>
+        <div class="drop"></div>
+        <div class="drop"></div>
+        <div class="drop"></div>
+        <div class="drop"></div>
+        <div class="drop"></div>
+        <div class="drop"></div>
+        <div class="drop"></div>
+    </div>
+
+    <!-- Contenedor principal -->
+    <main class="container">
+        <!-- Panel de controles (tema y color) -->
+        <div class="controls">
+            <!-- Botón de tema claro/oscuro -->
+            <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+                <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+
+            <!-- Selector de paleta de colores -->
+            <div class="color-selector">
+                <button class="color-option" data-scheme="blue" aria-label="Esquema azul"></button>
+                <button class="color-option" data-scheme="green" aria-label="Esquema verde"></button>
+                <button class="color-option" data-scheme="purple" aria-label="Esquema morado"></button>
+            </div>
+        </div>
+
+        <!-- Card principal -->
+        <div class="card">
+            <!-- Título -->
+            <h1 class="title">
+                <svg class="title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                </svg>
+                HydroSAR Monitor
+            </h1>
+            <p class="subtitle">Explorador de Lluvias</p>
+
+            <!-- Descripción -->
+            <p class="description">
+                Consulta si esta zona fue afectada por lluvias o inundaciones en los últimos 10 años.
+            </p>
+
+            <!-- Formulario de búsqueda -->
+            <form class="search-form" id="searchForm">
+                <div class="input-group">
+                    <label for="cityInput" class="input-label">Ingresa tu ciudad:</label>
+                    <input
+                        type="text"
+                        id="cityInput"
+                        class="city-input"
+                        placeholder="Ej: Lima, Perú"
+                        aria-label="Ingresa el nombre de la ciudad"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="search-button">
+                    <!-- Ícono de lluvia animado -->
+                    <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="19" x2="8" y2="21"></line>
+                        <line x1="8" y1="13" x2="8" y2="15"></line>
+                        <line x1="16" y1="19" x2="16" y2="21"></line>
+                        <line x1="16" y1="13" x2="16" y2="15"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="12" y1="15" x2="12" y2="17"></line>
+                        <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path>
+                    </svg>
+                    Consultar historial
+                </button>
+            </form>
+
+            <!-- Mapa interactivo de Leaflet -->
+            <div id="map-container"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by NASA SAR Data | Urban Flood Memory 2025</p>
+        </footer>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <!-- Leaflet Geosearch JS -->
+    <script src="https://unpkg.com/leaflet-geosearch@3.11.0/dist/geosearch.umd.js"></script>
+
+    <!-- Scripts de la aplicación -->
+    <script src="script.js"></script>
+    <script src="map.js"></script>
+    <script src="alerts.js"></script>
+    <script src="chatbot.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

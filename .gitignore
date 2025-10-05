@@ -1,0 +1,285 @@
+# ========================================
+# HYDROSAR MONITOR - GIT IGNORE
+# ========================================
+
+# ========================================
+# Sistema Operativo
+# ========================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ========================================
+# IDEs y Editores
+# ========================================
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.history/
+*.vsix
+
+# JetBrains IDEs (WebStorm, IntelliJ, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+tags
+[._]*.un~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ========================================
+# Node.js (si se usa en el futuro)
+# ========================================
+
+# Dependencias
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Archivos de sistema Node
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ========================================
+# Build y Distribución
+# ========================================
+
+# Builds
+dist/
+build/
+out/
+.cache/
+
+# PWA
+service-worker.js
+sw.js.map
+workbox-*.js
+
+# APK builds
+*.apk
+*.aab
+app-release.apk
+app-debug.apk
+
+# ========================================
+# Logs y Debugging
+# ========================================
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Debugging
+.vscode/launch.json
+chrome-debug/
+firefox-debug/
+
+# ========================================
+# Testing
+# ========================================
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output/
+lib-cov/
+
+# Test results
+test-results/
+junit.xml
+
+# ========================================
+# Archivos Temporales
+# ========================================
+
+# Temporal
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.backup
+*.old
+*~
+
+# ========================================
+# Archivos de Configuración Sensibles
+# ========================================
+
+# API Keys y Secretos
+config.local.js
+secrets.json
+credentials.json
+*.key
+*.pem
+*.p12
+.env.production
+
+# Firebase
+.firebase/
+.firebaserc
+firebase-debug.log
+
+# ========================================
+# Archivos Grandes y Medios
+# ========================================
+
+# Imágenes grandes
+*.psd
+*.ai
+*.sketch
+
+# Videos
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# Archivos comprimidos
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# ========================================
+# Claude Code / AI
+# ========================================
+
+# Claude Code cache
+.claude/
+.anthropic/
+
+# AI generated files (si no se quieren versionar)
+# *.generated.js
+# *.ai-output.*
+
+# ========================================
+# Específico del Proyecto
+# ========================================
+
+# Datos simulados grandes (si se crean)
+data/large-datasets/
+data/raw/
+data/*.csv
+data/*.json
+
+# Reportes ciudadanos (si se guardan en archivos)
+reports/
+user-reports/
+
+# Screenshots y demos
+screenshots/
+demos/
+
+# Archivos de backup del proyecto
+*.backup.html
+*.backup.js
+*.backup.css
+
+# Builds de prueba
+test-build/
+demo-build/
+
+# ========================================
+# Archivos que SÍ deben versionarse
+# ========================================
+
+# Mantener estos archivos importantes
+!.gitignore
+!README.md
+!CLAUDE.md
+!PWA_CONVERSION_GUIDE.md
+!LICENSE
+
+# Mantener estructura de carpetas
+!.gitkeep
