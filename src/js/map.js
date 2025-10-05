@@ -1647,8 +1647,14 @@ function setupNASAManualLoad() {
     let isLoaded = false;
 
     nasaStatusItem.addEventListener('click', async () => {
-        // Evitar múltiples clics
-        if (isLoading || isLoaded) return;
+        // Si ya está cargado, mostrar popup informativo
+        if (isLoaded) {
+            showNASAInfoPopup();
+            return;
+        }
+
+        // Evitar múltiples clics durante carga
+        if (isLoading) return;
 
         isLoading = true;
         console.log('🖱️ Usuario solicitó carga manual de NASA API');
@@ -1773,6 +1779,241 @@ function updateDataStatusBadge(historicalCount, nasaCount, nasaError = false) {
             nasaCountEl.title = `${nasaCount} eventos de Sentinel-1 SAR`;
         }
     }
+}
+
+/**
+ * Muestra popup informativo con eventos de NASA según la ubicación actual del mapa
+ */
+function showNASAInfoPopup() {
+    console.log('📊 Mostrando popup informativo de NASA');
+
+    // Obtener posición central del mapa
+    const mapCenter = map.getCenter();
+    const mapBounds = map.getBounds();
+
+    // Recopilar TODOS los eventos de NASA (no solo los visibles)
+    const allNASAEvents = [];
+    const visibleNASAEvents = [];
+
+    console.log('🔍 Buscando eventos NASA en SAR_DATA:', SAR_DATA);
+
+    if (SAR_DATA) {
+        Object.keys(SAR_DATA).forEach(year => {
+            if (!SAR_DATA[year]) return;
+
+            SAR_DATA[year].forEach(event => {
+                // Filtrar eventos de NASA:
+                // - Que tengan source de Sentinel-1 o NASA Earthdata
+                // - O que NO estén verificados (datos de la API, no históricos)
+                const isNASAEvent =
+                    (event.source && (event.source.includes('Sentinel-1') || event.source.includes('NASA Earthdata'))) ||
+                    (event.verified === false);
+
+                if (isNASAEvent && event.coords && event.coords.length > 0) {
+                    // Calcular centro del evento
+                    const eventCenter = getPolygonCenter(event.coords);
+
+                    const eventWithCenter = {
+                        ...event,
+                        year,
+                        center: eventCenter
+                    };
+
+                    // Agregar a la lista de todos los eventos
+                    allNASAEvents.push(eventWithCenter);
+
+                    // Si está visible, también agregarlo a visibles
+                    if (mapBounds.contains([eventCenter.lat, eventCenter.lng])) {
+                        visibleNASAEvents.push(eventWithCenter);
+                    }
+                }
+            });
+        });
+    }
+
+    console.log(`📊 Total eventos NASA: ${allNASAEvents.length}`);
+    console.log(`📍 Eventos NASA en vista actual: ${visibleNASAEvents.length}`);
+
+    // SOLO mostrar eventos visibles en el mapa actual
+    const eventsToShow = visibleNASAEvents;
+
+    // Ordenar por proximidad al centro del mapa
+    eventsToShow.sort((a, b) => {
+        const distA = map.distance([a.center.lat, a.center.lng], [mapCenter.lat, mapCenter.lng]);
+        const distB = map.distance([b.center.lat, b.center.lng], [mapCenter.lat, mapCenter.lng]);
+        return distA - distB;
+    });
+
+    // Limitar a los primeros 30 eventos más cercanos
+    const limitedEvents = eventsToShow.slice(0, 30);
+
+    // Crear popup HTML
+    showNASAPopupModal(limitedEvents, allNASAEvents.length, visibleNASAEvents.length);
+}
+
+/**
+ * Muestra el modal con información de eventos NASA
+ */
+function showNASAPopupModal(events, totalCount, visibleCount) {
+    // Crear overlay
+    let overlay = document.getElementById('nasa-info-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'nasa-info-overlay';
+        overlay.className = 'dropdown-overlay';
+        document.body.appendChild(overlay);
+    }
+
+    // Crear modal
+    let modal = document.getElementById('nasa-info-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'nasa-info-modal';
+        modal.className = 'historical-dropdown';
+        document.body.appendChild(modal);
+    }
+
+    // Mensaje descriptivo según el contexto
+    let infoMessage = '';
+    if (visibleCount > 0) {
+        infoMessage = `📍 Mostrando <strong>${events.length}</strong> eventos en esta área (${totalCount} total en Perú)`;
+    } else if (totalCount > 0) {
+        infoMessage = `📍 No hay eventos NASA en esta vista. Los <strong>${totalCount}</strong> eventos están en otras áreas de Perú. <em>Mueve el mapa para verlos.</em>`;
+    } else {
+        infoMessage = `📍 No hay eventos NASA cargados`;
+    }
+
+    // Contenido del modal
+    modal.innerHTML = `
+        <div class="dropdown-header">
+            <h3>🛰️ Datos NASA Sentinel-1 SAR</h3>
+            <button class="dropdown-close" aria-label="Cerrar">×</button>
+        </div>
+        <div class="dropdown-list">
+            <div style="padding: 1rem; background: var(--bg-primary); border-radius: 8px; margin-bottom: 1rem;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+                    ${infoMessage}
+                </p>
+            </div>
+            ${events.length === 0 ? `
+                <div style="padding: 2rem; text-align: center;">
+                    <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">🔍</p>
+                    <p style="color: var(--text-secondary);">No hay eventos de NASA disponibles</p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                        Verifica que los datos de NASA se hayan cargado correctamente
+                    </p>
+                </div>
+            ` : generateNASAEventsList(events)}
+        </div>
+    `;
+
+    // Event listeners
+    const closeBtn = modal.querySelector('.dropdown-close');
+    closeBtn.addEventListener('click', closeNASAPopup);
+    overlay.addEventListener('click', closeNASAPopup);
+
+    // Agregar click a cada item para centrar en el mapa
+    const items = modal.querySelectorAll('.dropdown-item');
+    items.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            const event = events[index];
+            map.setView([event.center.lat, event.center.lng], 14);
+            closeNASAPopup();
+        });
+    });
+
+    // Mostrar
+    setTimeout(() => {
+        overlay.classList.add('visible');
+        modal.classList.add('visible');
+    }, 10);
+}
+
+/**
+ * Genera la lista HTML de eventos NASA
+ */
+function generateNASAEventsList(events) {
+    // Agrupar por año
+    const eventsByYear = {};
+    events.forEach(event => {
+        if (!eventsByYear[event.year]) {
+            eventsByYear[event.year] = [];
+        }
+        eventsByYear[event.year].push(event);
+    });
+
+    // Generar HTML
+    let html = '';
+    const years = Object.keys(eventsByYear).sort((a, b) => b - a); // Años más recientes primero
+
+    years.forEach(year => {
+        html += `<div class="dropdown-year-header">📅 ${year}</div>`;
+
+        eventsByYear[year].forEach(event => {
+            const intensityPercent = Math.round(event.intensity * 100);
+            const icon = event.dataType === 'flood' ? '💧' : '🌊';
+
+            html += `
+                <div class="dropdown-item">
+                    <div class="dropdown-item-icon">${icon}</div>
+                    <div class="dropdown-item-content">
+                        <div class="dropdown-item-name">${event.name || 'Evento Sentinel-1'}</div>
+                        <div class="dropdown-item-meta">
+                            <span class="dropdown-item-source">${event.source || 'NASA Earthdata'}</span>
+                            <span class="dropdown-item-intensity">${intensityPercent}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    });
+
+    return html;
+}
+
+/**
+ * Cierra el popup de NASA
+ */
+function closeNASAPopup() {
+    const overlay = document.getElementById('nasa-info-overlay');
+    const modal = document.getElementById('nasa-info-modal');
+
+    if (overlay) {
+        overlay.classList.remove('visible');
+        // Importante: remover después de la animación para no bloquear el mapa
+        setTimeout(() => {
+            if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+        }, 300);
+    }
+
+    if (modal) {
+        modal.classList.remove('visible');
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 300);
+    }
+}
+
+/**
+ * Calcula el centro de un polígono
+ */
+function getPolygonCenter(coords) {
+    let latSum = 0;
+    let lngSum = 0;
+
+    coords.forEach(coord => {
+        latSum += coord[0];
+        lngSum += coord[1];
+    });
+
+    return {
+        lat: latSum / coords.length,
+        lng: lngSum / coords.length
+    };
 }
 
 // ========================================

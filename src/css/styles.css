@@ -406,9 +406,9 @@ body {
     animation: radar-pulse-rotate 1.2s ease-out infinite;
 }
 
-/* Indicador azul moderno - NASA activo */
+/* Indicador verde moderno - NASA activo */
 .status-icon.status-nasa-active {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     animation: pulse-icon 2s ease-in-out infinite;
 }
 
@@ -421,7 +421,7 @@ body {
     height: 100%;
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    background: rgba(59, 130, 246, 0.4);
+    background: rgba(16, 185, 129, 0.4);
     animation: radar-pulse 1.5s ease-out infinite;
 }
 
