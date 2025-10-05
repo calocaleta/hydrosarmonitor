@@ -28,6 +28,7 @@ let predictionMode = false;
 let currentZoomLevel = 11;
 let cumulativeMode = true; // Modo acumulado activado por defecto
 let minHumidityThreshold = 0.5; // Umbral mínimo de humedad (50% por defecto)
+let currentOpenPopup = null; // Trackear popup abierto actualmente
 
 // Configuración de niveles de detalle (LOD)
 const LOD_CONFIG = {
@@ -717,16 +718,36 @@ function createSARPolygon(data, year) {
         });
     });
 
-    // Popup con información
+    // Determinar color de fondo del año según antigüedad
+    const yearBgColor = isRecent ? '#2563eb' : '#60a5fa';
+
+    // Popup con diseño minimalista
     const popupContent = `
-        <div class="sar-popup">
-            <strong>Zona de Inundación</strong><br>
-            <strong>Año:</strong> ${year}<br>
-            <strong>Intensidad:</strong> ${(data.intensity * 100).toFixed(0)}%<br>
-            <span style="font-size: 0.85em; color: #666;">Datos SAR - NASA</span>
+        <div class="sar-popup-minimal">
+            <div class="popup-humidity">
+                <span class="popup-percentage">${(data.intensity * 100).toFixed(0)}%</span>
+                <span class="popup-drop">💧</span>
+            </div>
+            <div class="popup-year" style="background-color: ${yearBgColor};">
+                ${year}
+            </div>
         </div>
     `;
-    polygon.bindPopup(popupContent);
+
+    const popup = L.popup({
+        closeButton: false,
+        className: 'sar-popup-container'
+    }).setContent(popupContent);
+
+    polygon.bindPopup(popup);
+
+    // Cerrar popup anterior al abrir uno nuevo
+    polygon.on('click', function() {
+        if (currentOpenPopup && currentOpenPopup !== popup) {
+            map.closePopup(currentOpenPopup);
+        }
+        currentOpenPopup = popup;
+    });
 
     // Tooltip al pasar el mouse
     polygon.bindTooltip(`${year} - ${(data.intensity * 100).toFixed(0)}% intensidad`, {

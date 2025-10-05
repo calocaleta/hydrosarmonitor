@@ -799,6 +799,55 @@ body {
     color: var(--accent-primary);
 }
 
+/* Popup minimalista para áreas SAR */
+.sar-popup-container .leaflet-popup-content-wrapper {
+    padding: 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sar-popup-container .leaflet-popup-content {
+    margin: 0;
+    min-width: 120px;
+}
+
+.sar-popup-minimal {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.popup-humidity {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+}
+
+.popup-percentage {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.popup-drop {
+    font-size: 1.3rem;
+}
+
+.popup-year {
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: white;
+    /* background-color se aplica inline según el año */
+}
+
 /* ========================================
    NOTIFICACIÓN TEMPORAL DEL MAPA
    ======================================== */
