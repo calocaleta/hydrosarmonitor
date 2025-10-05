@@ -22,40 +22,75 @@ let layerGroups = {
 let currentYear = MAP_CONFIG.timelineEnd; // Iniciar en 2025 para mostrar todos los datos
 let predictionMode = false;
 
-// Datos simulados SAR (en producción, estos vendrían de la API de NASA)
-// Ahora con microzonas más pequeñas y realistas para Lima
-const SAR_DATA = {
-    // Estructura: año -> array de polígonos con coordenadas e intensidad
-    2015: [
-        // Microzonas en San Juan de Lurigancho
-        { coords: [[-12.0050, -77.0050], [-12.0050, -77.0045], [-12.0045, -77.0045], [-12.0045, -77.0050]], intensity: 0.6, type: 'historical' },
-        { coords: [[-12.0060, -77.0060], [-12.0060, -77.0055], [-12.0055, -77.0055], [-12.0055, -77.0060]], intensity: 0.4, type: 'historical' },
-        { coords: [[-12.0070, -77.0070], [-12.0068, -77.0068], [-12.0065, -77.0070]], intensity: 0.5, type: 'historical' }
-    ],
-    2018: [
-        // Microzonas en La Molina / Ate
-        { coords: [[-12.0450, -77.0480], [-12.0450, -77.0475], [-12.0445, -77.0475], [-12.0445, -77.0480]], intensity: 0.8, type: 'historical' },
-        { coords: [[-12.0550, -77.0550], [-12.0548, -77.0545], [-12.0545, -77.0548]], intensity: 0.7, type: 'historical' },
-        { coords: [[-12.0460, -77.0490], [-12.0458, -77.0488], [-12.0455, -77.0490]], intensity: 0.65, type: 'historical' }
-    ],
-    2020: [
-        // Microzonas en Chorrillos / Villa El Salvador
-        { coords: [[-12.1850, -77.0150], [-12.1848, -77.0145], [-12.1845, -77.0148]], intensity: 0.5, type: 'historical' },
-        { coords: [[-12.1900, -77.0200], [-12.1898, -77.0198], [-12.1895, -77.0200]], intensity: 0.55, type: 'historical' }
-    ],
-    2023: [
-        // Microzonas recientes en Comas
-        { coords: [[-11.9380, -77.0460], [-11.9378, -77.0458], [-11.9375, -77.0460]], intensity: 0.9, type: 'recent' },
-        { coords: [[-11.9400, -77.0480], [-11.9400, -77.0475], [-11.9395, -77.0475], [-11.9395, -77.0480]], intensity: 0.75, type: 'recent' },
-        { coords: [[-11.9420, -77.0500], [-11.9418, -77.0498], [-11.9415, -77.0500]], intensity: 0.8, type: 'recent' }
-    ],
-    2024: [
-        // Microzonas recientes en Independencia / Los Olivos
-        { coords: [[-11.9920, -77.0540], [-11.9918, -77.0538], [-11.9915, -77.0540]], intensity: 0.85, type: 'recent' },
-        { coords: [[-12.0020, -77.0640], [-12.0018, -77.0638], [-12.0015, -77.0640]], intensity: 0.7, type: 'recent' },
-        { coords: [[-12.0040, -77.0660], [-12.0040, -77.0655], [-12.0035, -77.0655], [-12.0035, -77.0660]], intensity: 0.75, type: 'recent' }
-    ]
-};
+// Función para generar microzonas iniciales automáticamente
+function generateInitialMicrozones() {
+    const zones = {
+        2015: [],
+        2018: [],
+        2020: [],
+        2023: [],
+        2024: []
+    };
+
+    // Áreas de Lima donde generar microzonas (distritos vulnerables)
+    const limaAreas = [
+        { name: 'San Juan de Lurigancho', lat: -12.0050, lng: -77.0050 },
+        { name: 'Villa El Salvador', lat: -12.2050, lng: -76.9350 },
+        { name: 'Comas', lat: -11.9380, lng: -77.0460 },
+        { name: 'Ate', lat: -12.0450, lng: -76.9550 },
+        { name: 'San Martín de Porres', lat: -12.0050, lng: -77.0850 },
+        { name: 'Chorrillos', lat: -12.1650, lng: -77.0150 },
+        { name: 'Los Olivos', lat: -11.9920, lng: -77.0640 },
+        { name: 'Independencia', lat: -11.9920, lng: -77.0540 },
+        { name: 'Villa María del Triunfo', lat: -12.1650, lng: -76.9350 },
+        { name: 'Puente Piedra', lat: -11.8650, lng: -77.0750 },
+        { name: 'Carabayllo', lat: -11.8750, lng: -77.0350 },
+        { name: 'Lurigancho-Chosica', lat: -11.9450, lng: -76.8550 },
+        { name: 'Rímac', lat: -12.0250, lng: -77.0450 },
+        { name: 'El Agustino', lat: -12.0450, lng: -77.0150 },
+        { name: 'Santa Anita', lat: -12.0550, lng: -76.9750 },
+        { name: 'La Victoria', lat: -12.0650, lng: -77.0250 }
+    ];
+
+    // Generar microzonas para cada año
+    Object.keys(zones).forEach(year => {
+        const yearNum = parseInt(year);
+        const type = yearNum >= 2023 ? 'recent' : 'historical';
+        const numZonesPerArea = 30; // 30 microzonas por área (16 áreas × 30 × 5 años = 2400 microzonas iniciales)
+
+        limaAreas.forEach(area => {
+            for (let i = 0; i < numZonesPerArea; i++) {
+                // Offset aleatorio dentro del distrito (500m radius)
+                const offset = 0.005;
+                const lat = area.lat + (Math.random() - 0.5) * offset * 2;
+                const lng = area.lng + (Math.random() - 0.5) * offset * 2;
+
+                // Tamaño ultra pequeño (5-30 metros)
+                const size = 0.00005 + Math.random() * 0.00025;
+                const intensity = 0.3 + Math.random() * 0.6;
+
+                // Crear polígono simple de 3-4 vértices
+                const numVert = Math.random() > 0.5 ? 3 : 4;
+                const coords = [];
+                for (let v = 0; v < numVert; v++) {
+                    const angle = (Math.PI * 2 * v) / numVert + Math.random() * 0.3;
+                    const dist = size * (0.8 + Math.random() * 0.4);
+                    coords.push([
+                        lat + Math.cos(angle) * dist,
+                        lng + Math.sin(angle) * dist
+                    ]);
+                }
+
+                zones[year].push({ coords, intensity, type });
+            }
+        });
+    });
+
+    return zones;
+}
+
+// Generar datos SAR con microzonas automáticamente
+const SAR_DATA = generateInitialMicrozones();
 
 // Datos de predicción (zonas de riesgo)
 const PREDICTION_DATA = [
@@ -291,21 +326,21 @@ function loadSARDataForViewport() {
     const latDiff = ne.lat - sw.lat;
     const lngDiff = ne.lng - sw.lng;
 
-    // Generar más polígonos pero más pequeños (microzonas)
-    const numPolygons = Math.floor(Math.random() * 8) + 8; // 8-15 microzonas
+    // Generar MUCHAS microzonas pequeñas (50-100 por viewport)
+    const numPolygons = Math.floor(Math.random() * 51) + 50; // 50-100 microzonas
     const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
 
     for (let i = 0; i < numPolygons; i++) {
         const year = yearsToGenerate[Math.floor(Math.random() * yearsToGenerate.length)];
         const type = year >= 2023 ? 'recent' : 'historical';
-        const intensity = 0.4 + Math.random() * 0.5; // 0.4 - 0.9
+        const intensity = 0.3 + Math.random() * 0.6; // 0.3 - 0.9
 
         // Generar coordenadas aleatorias dentro del viewport
         const lat = sw.lat + Math.random() * latDiff;
         const lng = sw.lng + Math.random() * lngDiff;
 
-        // Tamaño mucho más pequeño para representar microzonas (20-100 metros aprox)
-        const size = 0.0002 + Math.random() * 0.0008; // ~20-100 metros
+        // Tamaño ULTRA pequeño para microzonas específicas (5-30 metros)
+        const size = 0.00005 + Math.random() * 0.00025; // ~5-30 metros
 
         // Crear formas más irregulares para microzonas
         const coords = createMicrozonePolygon(lat, lng, size);
@@ -413,25 +448,25 @@ function loadAllSARData() {
  */
 function loadSARDataForLocation(lat, lng, locationName) {
     // Generar microzonas SAR alrededor de la ubicación
-    const offset = 0.005; // Radio de búsqueda reducido
+    const offset = 0.01; // Radio de búsqueda de 1km
 
-    // Generar más microzonas pequeñas (5-10)
+    // Generar MUCHAS microzonas pequeñas (20-40)
     const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
-    const numPolygons = Math.floor(Math.random() * 6) + 5; // 5-10 microzonas
+    const numPolygons = Math.floor(Math.random() * 21) + 20; // 20-40 microzonas
 
     let generatedData = [];
 
     for (let i = 0; i < numPolygons; i++) {
         const year = yearsToGenerate[Math.floor(Math.random() * yearsToGenerate.length)];
         const type = year >= 2023 ? 'recent' : 'historical';
-        const intensity = 0.5 + Math.random() * 0.4; // 0.5 - 0.9
+        const intensity = 0.3 + Math.random() * 0.6; // 0.3 - 0.9
 
         // Generar coordenadas aleatorias cerca de la ubicación
         const latOffset = (Math.random() - 0.5) * offset * 2;
         const lngOffset = (Math.random() - 0.5) * offset * 2;
 
-        // Tamaño de microzona (20-100 metros)
-        const size = 0.0002 + Math.random() * 0.0008;
+        // Tamaño ULTRA pequeño (5-30 metros)
+        const size = 0.00005 + Math.random() * 0.00025;
 
         // Crear polígono irregular para microzona
         const centerLat = lat + latOffset;
