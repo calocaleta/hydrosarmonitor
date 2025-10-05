@@ -741,17 +741,21 @@ function createSARPolygon(data, year) {
 
     polygon.bindPopup(popup);
 
-    // Cerrar popup anterior al abrir uno nuevo
+    // Mostrar popup al pasar el mouse y al hacer click
+    polygon.on('mouseover', function() {
+        if (currentOpenPopup && currentOpenPopup !== popup) {
+            map.closePopup(currentOpenPopup);
+        }
+        this.openPopup();
+        currentOpenPopup = popup;
+    });
+
     polygon.on('click', function() {
         if (currentOpenPopup && currentOpenPopup !== popup) {
             map.closePopup(currentOpenPopup);
         }
+        this.openPopup();
         currentOpenPopup = popup;
-    });
-
-    // Tooltip al pasar el mouse
-    polygon.bindTooltip(`${year} - ${(data.intensity * 100).toFixed(0)}% intensidad`, {
-        sticky: true
     });
 
     return polygon;
