@@ -502,27 +502,32 @@ function loadSARDataForLocation(lat, lng, locationName) {
  * @returns {L.Polygon} Polígono de Leaflet
  */
 function createSARPolygon(data, year) {
-    const isHistorical = data.type === 'historical';
-
-    const color = isHistorical ? '#808080' : '#4299e1';
-    const opacity = data.intensity * 0.6;
+    // Todos los polígonos son azul, con opacidad basada en intensidad
+    const blueColor = '#2563eb'; // Azul vibrante
+    const baseOpacity = data.intensity * 0.7;
 
     const polygon = L.polygon(data.coords, {
-        color: color,
-        fillColor: color,
-        fillOpacity: opacity,
-        weight: 2,
-        opacity: 0.8
+        color: blueColor,
+        fillColor: blueColor,
+        fillOpacity: baseOpacity,
+        weight: 1, // Borde muy delgado (1 pixel)
+        opacity: 0.4, // Borde semi-transparente
+        className: 'sar-polygon' // Para animaciones CSS
     });
 
-    // Guardar el año en el polígono para uso posterior
+    // Guardar el año y datos en el polígono para uso posterior
     polygon.options.year = year;
     polygon.options.baseIntensity = data.intensity;
+
+    // Aplicar animación de "gota que se desparrama" cuando se añade al mapa
+    polygon.on('add', function() {
+        animateDropSplash(polygon);
+    });
 
     // Popup con información
     const popupContent = `
         <div class="sar-popup">
-            <strong>${isHistorical ? 'Lluvia Histórica' : 'Lluvia Reciente'}</strong><br>
+            <strong>Zona de Inundación</strong><br>
             <strong>Año:</strong> ${year}<br>
             <strong>Intensidad:</strong> ${(data.intensity * 100).toFixed(0)}%<br>
             <span style="font-size: 0.85em; color: #666;">Datos SAR - NASA</span>
@@ -536,6 +541,38 @@ function createSARPolygon(data, year) {
     });
 
     return polygon;
+}
+
+/**
+ * Anima un polígono con efecto de gota que se desparrama
+ * @param {L.Polygon} polygon - Polígono a animar
+ */
+function animateDropSplash(polygon) {
+    const element = polygon._path;
+    if (!element) return;
+
+    // Efecto inicial: la gota cae y se expande
+    element.style.animation = 'none';
+    element.offsetHeight; // Forzar reflow
+
+    // Aplicar animación de expansión
+    element.style.animation = 'dropSplash 1.2s ease-out';
+
+    // Luego aplicar animación de pulso sutil en el borde
+    setTimeout(() => {
+        element.style.animation = 'borderPulse 3s ease-in-out infinite';
+    }, 1200);
+}
+
+/**
+ * Detiene la animación de un polígono
+ * @param {L.Polygon} polygon - Polígono a detener animación
+ */
+function stopPolygonAnimation(polygon) {
+    const element = polygon._path;
+    if (element) {
+        element.style.animation = 'none';
+    }
 }
 
 /**
@@ -639,62 +676,50 @@ function handleTimelineChange(e) {
 function updateLayerOpacityByYear(endYear) {
     const startYear = MAP_CONFIG.timelineStart;
     const yearRange = endYear - startYear;
+    const blueColor = '#2563eb'; // Mismo azul para todos
 
-    // Actualizar opacidad en capa histórica
-    layerGroups.historical.eachLayer(function(layer) {
+    // Función helper para actualizar capas
+    const updateLayer = (layer) => {
         const layerYear = layer.options.year;
 
         if (layerYear <= endYear) {
             // Calcular opacidad progresiva (más antiguo = más transparente)
             const yearDiff = endYear - layerYear;
-            const ageFactor = 1 - (yearDiff / yearRange);
+            const ageFactor = yearRange > 0 ? 1 - (yearDiff / yearRange) : 1;
 
-            // Opacidad: 0.2 (muy antiguo) a 0.8 (reciente)
-            const opacity = 0.2 + (ageFactor * 0.6);
-            const fillOpacity = layer.options.baseIntensity * opacity;
+            // Opacidad: 0.15 (muy antiguo) a 0.7 (reciente)
+            const baseOpacity = 0.15 + (ageFactor * 0.55);
+            const fillOpacity = layer.options.baseIntensity * baseOpacity;
+
+            // Opacidad del borde: más sutil para datos antiguos
+            const borderOpacity = 0.2 + (ageFactor * 0.4);
 
             layer.setStyle({
+                color: blueColor,
+                fillColor: blueColor,
                 fillOpacity: fillOpacity,
-                opacity: opacity
+                opacity: borderOpacity,
+                weight: 1
             });
 
-            // Mostrar el layer
+            // Mostrar el layer con animación
             if (!map.hasLayer(layer)) {
                 layer.addTo(map);
+                // Re-animar cuando reaparece
+                setTimeout(() => animateDropSplash(layer), 50);
             }
         } else {
-            // Ocultar capas del futuro
+            // Ocultar capas del futuro con fade out
             if (map.hasLayer(layer)) {
+                stopPolygonAnimation(layer);
                 map.removeLayer(layer);
             }
         }
-    });
+    };
 
-    // Actualizar opacidad en capa reciente
-    layerGroups.recent.eachLayer(function(layer) {
-        const layerYear = layer.options.year;
-
-        if (layerYear <= endYear) {
-            const yearDiff = endYear - layerYear;
-            const ageFactor = 1 - (yearDiff / yearRange);
-
-            const opacity = 0.2 + (ageFactor * 0.6);
-            const fillOpacity = layer.options.baseIntensity * opacity;
-
-            layer.setStyle({
-                fillOpacity: fillOpacity,
-                opacity: opacity
-            });
-
-            if (!map.hasLayer(layer)) {
-                layer.addTo(map);
-            }
-        } else {
-            if (map.hasLayer(layer)) {
-                map.removeLayer(layer);
-            }
-        }
-    });
+    // Actualizar ambas capas
+    layerGroups.historical.eachLayer(updateLayer);
+    layerGroups.recent.eachLayer(updateLayer);
 }
 
 // ========================================
