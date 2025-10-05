@@ -61,7 +61,8 @@ async function searchSentinel1Data(startDate, endDate) {
 
         const url = `${NASA_CONFIG.CMR_SEARCH_URL}?${params}`;
 
-        console.log('📡 URL de búsqueda:', url);
+        console.log('📡 Intentando conexión a NASA CMR API...');
+        console.log('   URL:', url.substring(0, 100) + '...');
 
         // Hacer petición con autenticación
         const response = await fetch(url, {
@@ -71,6 +72,8 @@ async function searchSentinel1Data(startDate, endDate) {
                 'Accept': 'application/json'
             }
         });
+
+        console.log(`📊 Respuesta HTTP: ${response.status} ${response.statusText}`);
 
         if (!response.ok) {
             const errorText = await response.text().catch(() => 'Sin detalles');
@@ -203,9 +206,9 @@ async function fetchNASAFloodData(years = [2023, 2024, 2025]) {
         const endDate = `${year}-12-31`;
 
         try {
-            // Timeout de 5 segundos por petición
+            // Timeout de 15 segundos por petición (aumentado para API lenta)
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout')), 5000)
+                setTimeout(() => reject(new Error('Timeout de 15s excedido')), 15000)
             );
 
             const dataPromise = searchSentinel1Data(startDate, endDate)
@@ -217,7 +220,7 @@ async function fetchNASAFloodData(years = [2023, 2024, 2025]) {
             return { year, events };
 
         } catch (error) {
-            console.error(`❌ Error en ${year}:`, error.message);
+            console.warn(`⚠️ Error en ${year}: ${error.message} - Usando datos históricos para este año`);
             return { year, events: [] };
         }
     });

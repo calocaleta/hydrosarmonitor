@@ -1206,7 +1206,7 @@ function togglePredictionMode() {
             <span>Desactivar Predicción</span>
         `;
 
-        showNotification('Predicción generada por IA basada en datos históricos SAR', 'info', 5000);
+        showMapNotification('Predicción generada por IA basada en datos históricos SAR', 'info');
     } else {
         // Desactivar predicción
         hidePredictionLayer();
@@ -1294,13 +1294,12 @@ function createPredictionPolygon(zone) {
 // ========================================
 
 /**
- * Muestra una notificación temporal
+ * Muestra una notificación temporal (renombrada para evitar conflicto)
  * @param {string} message - Mensaje a mostrar
  * @param {string} type - Tipo de notificación
- * @param {number} duration - Duración en ms
  */
-function showNotification(message, type = 'info', duration = 3000) {
-    // Reutilizar la función de notificaciones del script.js
+function showMapNotification(message, type = 'info') {
+    // Usar la función global de script.js
     if (typeof window.showNotification === 'function') {
         window.showNotification(message, type);
     } else {
@@ -1606,48 +1605,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeHistoricalEventsTour();
     console.log('✅ Tour de eventos históricos inicializado');
 
-    // PASO 3: Cargar NASA API en background (NO bloqueante)
-    LoadingManager.setStatus('Conectando a NASA Earthdata...');
-    LoadingManager.addStep('🛰️ Consultando API de NASA en segundo plano...');
+    // PASO 3: Configurar carga MANUAL de NASA API (click en badge)
+    LoadingManager.setStatus('Listo - Click en badge NASA para cargar datos');
+    LoadingManager.addStep('ℹ️ NASA API: Click en el badge para cargar datos', false, true);
 
-    // Cargar NASA en paralelo SIN await (background)
-    initializeSARData().then(() => {
-        LoadingManager.addStep('✅ Datos de NASA cargados', true);
-        LoadingManager.setProgress(90);
+    // Inicializar badge de NASA en modo manual
+    const historicalCount = window.REAL_FLOOD_DATA ?
+        Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
+    updateDataStatusBadge(historicalCount, null); // null = no cargado aún
 
-        // Recargar datos del mapa con información de NASA
-        console.log('🔄 Actualizando mapa con datos de NASA...');
-        loadDataForCurrentZoom();
-
-        // Contar eventos
-        const totalCount = Object.values(SAR_DATA).reduce((sum, arr) => sum + arr.length, 0);
-        const historicalCount = window.REAL_FLOOD_DATA ?
-            Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
-        const nasaCount = totalCount - historicalCount;
-
-        // Actualizar badge de estado
-        updateDataStatusBadge(historicalCount, nasaCount);
-
-        // Mostrar notificación de éxito
-        if (window.showNotification) {
-            window.showNotification(`✅ Datos de NASA cargados: ${nasaCount} eventos adicionales`, 'success');
-        }
-    }).catch(error => {
-        console.error('❌ Error cargando datos de NASA:', error);
-        LoadingManager.addStep('⚠️ NASA API no disponible, usando solo datos históricos', false, true);
-
-        // Actualizar badge con error
-        const historicalCount = window.REAL_FLOOD_DATA ?
-            Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
-        updateDataStatusBadge(historicalCount, 0, true);
-
-        // Mostrar mensaje informativo al usuario
-        console.log('ℹ️ La aplicación funciona correctamente con datos históricos verificados');
-        console.log('   Posibles causas del error de NASA API:');
-        console.log('   - Token de autenticación expirado');
-        console.log('   - Restricciones de CORS del navegador');
-        console.log('   - API temporalmente no disponible');
-    });
+    // Configurar evento click en el badge de NASA
+    setupNASAManualLoad();
 
     // PASO 4: Ocultar loading screen (mapa ya está listo)
     setTimeout(() => {
@@ -1664,6 +1632,93 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ========================================
 // DATA STATUS BADGE UPDATER
 // ========================================
+
+/**
+ * Configura la carga manual de datos de NASA
+ */
+function setupNASAManualLoad() {
+    const nasaStatusItem = document.getElementById('nasa-status-item');
+    const nasaIcon = document.getElementById('status-icon-nasa');
+    const nasaCountEl = document.getElementById('status-count-nasa');
+
+    if (!nasaStatusItem) return;
+
+    let isLoading = false;
+    let isLoaded = false;
+
+    nasaStatusItem.addEventListener('click', async () => {
+        // Evitar múltiples clics
+        if (isLoading || isLoaded) return;
+
+        isLoading = true;
+        console.log('🖱️ Usuario solicitó carga manual de NASA API');
+
+        // Actualizar UI - estado de carga
+        if (nasaIcon) {
+            nasaIcon.className = 'status-icon status-loading';
+        }
+        if (nasaCountEl) {
+            nasaCountEl.textContent = 'Cargando...';
+        }
+
+        // Mostrar notificación
+        if (window.showNotification) {
+            window.showNotification('🛰️ Cargando datos de NASA Earthdata...', 'info');
+        }
+
+        try {
+            // Cargar datos de NASA
+            await initializeSARData();
+
+            // Recargar mapa
+            console.log('🔄 Actualizando mapa con datos de NASA...');
+            loadDataForCurrentZoom();
+
+            // Contar eventos
+            const totalCount = Object.values(SAR_DATA).reduce((sum, arr) => sum + arr.length, 0);
+            const historicalCount = window.REAL_FLOOD_DATA ?
+                Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
+            const nasaCount = totalCount - historicalCount;
+
+            // Actualizar badge
+            updateDataStatusBadge(historicalCount, nasaCount);
+
+            // Marcar como cargado
+            isLoaded = true;
+
+            // Mostrar notificación de éxito
+            if (window.showNotification) {
+                window.showNotification(`✅ NASA cargado: ${nasaCount} eventos adicionales`, 'success');
+            }
+
+            console.log(`✅ Carga manual exitosa: ${nasaCount} eventos de NASA`);
+
+        } catch (error) {
+            console.error('❌ Error en carga manual de NASA:', error);
+
+            // Actualizar badge con error
+            const historicalCount = window.REAL_FLOOD_DATA ?
+                Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
+            updateDataStatusBadge(historicalCount, 0, true);
+
+            // Mostrar error al usuario
+            if (window.showNotification) {
+                window.showNotification('❌ Error cargando NASA API. Revisa la consola.', 'error');
+            }
+
+            console.log('ℹ️ Detalles del error:');
+            console.log('   Error:', error.message || error);
+            console.log('   Posibles causas:');
+            console.log('   - Token expirado (renovar en https://urs.earthdata.nasa.gov/)');
+            console.log('   - CORS bloqueado (necesita backend proxy)');
+            console.log('   - API no disponible');
+        } finally {
+            isLoading = false;
+        }
+    });
+
+    console.log('✅ Carga manual de NASA configurada (click en badge)');
+}
 
 /**
  * Actualiza el badge de estado de datos
@@ -1690,11 +1745,14 @@ function updateDataStatusBadge(historicalCount, nasaCount, nasaError = false) {
 
     // Actualizar datos de NASA
     if (nasaCount === null) {
-        // Aún cargando
+        // No cargado aún (modo manual)
         if (nasaIcon) {
-            nasaIcon.className = 'status-icon status-loading';
+            nasaIcon.className = 'status-icon status-inactive';
         }
-        if (nasaCountEl) nasaCountEl.textContent = 'Cargando...';
+        if (nasaCountEl) {
+            nasaCountEl.textContent = 'Click para cargar';
+            nasaCountEl.style.cursor = 'pointer';
+        }
     } else if (nasaError) {
         // Error - pero la app funciona con datos históricos
         if (nasaIcon) {
