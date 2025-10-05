@@ -391,13 +391,16 @@ function loadDataForCurrentZoom() {
         const data = { coords, intensity, type };
         const polygon = createSARPolygon(data, year);
 
-        // Agregar a la capa LOD correspondiente
-        layerGroups[lod].addLayer(polygon);
+        // Solo agregar si el polígono fue creado (intensity >= 0.5)
+        if (polygon) {
+            // Agregar a la capa LOD correspondiente
+            layerGroups[lod].addLayer(polygon);
 
-        // Guardar posición en cache
-        positionCache[year].push({ lat, lng });
+            // Guardar posición en cache
+            positionCache[year].push({ lat, lng });
 
-        generated++;
+            generated++;
+        }
     }
 
     console.log(`✅ Generadas ${generated} zonas sin superposición (${attempts} intentos)`);
@@ -423,8 +426,10 @@ function loadAllHistoricalData() {
     Object.keys(SAR_DATA).forEach(year => {
         SAR_DATA[year].forEach(data => {
             const polygon = createSARPolygon(data, parseInt(year));
-            layerGroups.microzone.addLayer(polygon);
-            totalLoaded++;
+            if (polygon) {
+                layerGroups.microzone.addLayer(polygon);
+                totalLoaded++;
+            }
         });
     });
 
@@ -558,10 +563,12 @@ function loadSARData(year) {
             SAR_DATA[y].forEach(data => {
                 const polygon = createSARPolygon(data, y);
 
-                if (data.type === 'historical') {
-                    layerGroups.historical.addLayer(polygon);
-                } else {
-                    layerGroups.recent.addLayer(polygon);
+                if (polygon) {
+                    if (data.type === 'historical') {
+                        layerGroups.historical.addLayer(polygon);
+                    } else {
+                        layerGroups.recent.addLayer(polygon);
+                    }
                 }
             });
         }
@@ -583,10 +590,12 @@ function loadAllSARData() {
         SAR_DATA[year].forEach(data => {
             const polygon = createSARPolygon(data, parseInt(year));
 
-            if (data.type === 'historical') {
-                layerGroups.historical.addLayer(polygon);
-            } else {
-                layerGroups.recent.addLayer(polygon);
+            if (polygon) {
+                if (data.type === 'historical') {
+                    layerGroups.historical.addLayer(polygon);
+                } else {
+                    layerGroups.recent.addLayer(polygon);
+                }
             }
         });
     });
@@ -630,10 +639,12 @@ function loadSARDataForLocation(lat, lng, locationName) {
         const data = { coords, intensity, type };
         const polygon = createSARPolygon(data, year);
 
-        if (type === 'historical') {
-            layerGroups.historical.addLayer(polygon);
-        } else {
-            layerGroups.recent.addLayer(polygon);
+        if (polygon) {
+            if (type === 'historical') {
+                layerGroups.historical.addLayer(polygon);
+            } else {
+                layerGroups.recent.addLayer(polygon);
+            }
         }
 
         generatedData.push({ year, intensity: (intensity * 100).toFixed(0) });
@@ -656,6 +667,11 @@ function loadSARDataForLocation(lat, lng, locationName) {
  * @returns {L.Polygon} Polígono de Leaflet
  */
 function createSARPolygon(data, year) {
+    // Solo crear polígonos con intensidad >= 0.5 (50% o más de humedad)
+    if (data.intensity < 0.5) {
+        return null;
+    }
+
     // Determinar color según antigüedad del dato
     // Datos recientes (2023-2025) = azul oscuro
     // Datos antiguos (2015-2022) = celeste
@@ -663,9 +679,10 @@ function createSARPolygon(data, year) {
     const color = isRecent ? '#2563eb' : '#60a5fa'; // Azul oscuro vs celeste
 
     // Transparencia proporcional a humedad/intensidad
-    // 100% humedad (intensity = 1.0) → 0% transparencia (fillOpacity = 1.0)
-    // 0% humedad (intensity = 0.0) → 100% transparencia (fillOpacity = 0.0)
-    const fillOpacity = data.intensity;
+    // Mapear rango 0.5-1.0 a rango de opacidad 0.0-1.0
+    // 50% humedad (0.5) → 100% transparencia (0.0)
+    // 100% humedad (1.0) → 0% transparencia (1.0)
+    const fillOpacity = (data.intensity - 0.5) * 2;
 
     const polygon = L.polygon(data.coords, {
         color: color,
@@ -859,8 +876,10 @@ function updateLayerOpacityByYear(endYear) {
         const color = isRecent ? '#2563eb' : '#60a5fa';
 
         // Transparencia basada en intensidad/humedad
-        // 100% humedad = 0% transparencia (fillOpacity = 1.0 * baseIntensity)
-        const fillOpacity = layer.options.baseIntensity;
+        // Mapear rango 0.5-1.0 a rango de opacidad 0.0-1.0
+        // 50% humedad (0.5) → 100% transparencia (0.0)
+        // 100% humedad (1.0) → 0% transparencia (1.0)
+        const fillOpacity = (layer.options.baseIntensity - 0.5) * 2;
 
         if (cumulativeMode) {
             // MODO ACUMULADO: Mostrar desde 2015 hasta el año seleccionado
