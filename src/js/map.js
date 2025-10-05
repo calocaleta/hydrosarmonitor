@@ -145,6 +145,8 @@ function initializeMap() {
     // Inicializar controles adicionales
     initializeTimelineSlider();
     initializePredictionButton();
+    initializeAIHelpButton();
+    initializeReportButton();
 
     // Event listeners para cargar datos cuando el mapa se mueve
     addMapMovementListeners();
@@ -1293,6 +1295,88 @@ function createPredictionPolygon(zone) {
     });
 
     return polygon;
+}
+
+// ========================================
+// BOTONES DE AYUDA Y REPORTE
+// ========================================
+
+/**
+ * Inicializa el botón de Ayuda IA (Chatbot)
+ */
+function initializeAIHelpButton() {
+    const aiHelpControl = L.Control.extend({
+        options: {
+            position: 'topleft'
+        },
+        onAdd: function(map) {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control ai-help-control');
+
+            const button = L.DomUtil.create('button', 'ai-help-button', container);
+            button.id = 'ai-help-toggle';
+            button.innerHTML = `
+                <svg class="ai-help-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span>Ayuda IA</span>
+            `;
+
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.on(button, 'click', function() {
+                // Abrir chatbot (función definida en chatbot.js)
+                if (typeof toggleChat === 'function') {
+                    toggleChat();
+                } else {
+                    console.warn('Chatbot no disponible');
+                }
+            });
+
+            return container;
+        }
+    });
+
+    map.addControl(new aiHelpControl());
+}
+
+/**
+ * Inicializa el botón de Reportar Zona Afectada
+ */
+function initializeReportButton() {
+    const reportControl = L.Control.extend({
+        options: {
+            position: 'topleft'
+        },
+        onAdd: function(map) {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control report-control');
+
+            const button = L.DomUtil.create('button', 'report-button', container);
+            button.id = 'report-toggle';
+            button.innerHTML = `
+                <svg class="report-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span>Reportar Zona</span>
+            `;
+
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.on(button, 'click', function() {
+                // Abrir formulario de reporte (función definida en alerts.js)
+                if (typeof openReportForm === 'function') {
+                    openReportForm();
+                } else {
+                    console.warn('Sistema de reportes no disponible');
+                }
+            });
+
+            return container;
+        }
+    });
+
+    map.addControl(new reportControl());
 }
 
 // ========================================

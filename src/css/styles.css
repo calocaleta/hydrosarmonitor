@@ -1061,6 +1061,62 @@ body {
     animation: pulse-prediction 2s ease-in-out infinite;
 }
 
+/* ========================================
+   BOTONES DE AYUDA IA Y REPORTE
+   ======================================== */
+
+.ai-help-control,
+.report-control {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.ai-help-button,
+.report-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px var(--shadow);
+    transition: all 0.3s ease;
+}
+
+/* Botón Ayuda IA - Color azul/morado */
+.ai-help-button {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.ai-help-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Botón Reportar - Color naranja/rojo */
+.report-button {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+}
+
+.report-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.ai-help-icon,
+.report-icon {
+    width: 20px;
+    height: 20px;
+    stroke: white;
+    fill: none;
+}
+
 @keyframes pulse-prediction {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 0.6; }
@@ -1344,7 +1400,9 @@ body {
         max-width: 300px;
     }
 
-    .prediction-button {
+    .prediction-button,
+    .ai-help-button,
+    .report-button {
         font-size: 0.85rem;
         padding: 0.65rem 1rem;
     }
@@ -1445,16 +1503,22 @@ body {
         padding: 0.2rem 0.6rem;
     }
 
-    .prediction-button {
+    .prediction-button,
+    .ai-help-button,
+    .report-button {
         font-size: 0.8rem;
         padding: 0.6rem 0.9rem;
     }
 
-    .prediction-button span {
+    .prediction-button span,
+    .ai-help-button span,
+    .report-button span {
         display: none;
     }
 
-    .prediction-button .prediction-icon {
+    .prediction-button .prediction-icon,
+    .ai-help-button .ai-help-icon,
+    .report-button .report-icon {
         margin: 0;
     }
 
