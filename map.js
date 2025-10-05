@@ -45,7 +45,8 @@ function generateInitialMicrozones() {
         2018: [],
         2020: [],
         2023: [],
-        2024: []
+        2024: [],
+        2025: []
     };
 
     // Áreas de Lima donde generar microzonas (distritos vulnerables)
@@ -343,7 +344,7 @@ function loadDataForCurrentZoom() {
     const lngDiff = ne.lng - sw.lng;
 
     const config = LOD_CONFIG[lod];
-    const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
+    const yearsToGenerate = [2015, 2018, 2020, 2023, 2024, 2025];
 
     // ZOOM MÁXIMO: Cargar TODOS los datos históricos predefinidos
     if (lod === 'microzone' && layerGroups.microzone.getLayers().length === 0) {
@@ -481,7 +482,7 @@ function loadSARDataForViewport() {
 
     // Generar MUCHAS microzonas pequeñas (50-100 por viewport)
     const numPolygons = Math.floor(Math.random() * 51) + 50; // 50-100 microzonas
-    const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
+    const yearsToGenerate = [2015, 2018, 2020, 2023, 2024, 2025];
 
     for (let i = 0; i < numPolygons; i++) {
         const year = yearsToGenerate[Math.floor(Math.random() * yearsToGenerate.length)];
@@ -604,7 +605,7 @@ function loadSARDataForLocation(lat, lng, locationName) {
     const offset = 0.01; // Radio de búsqueda de 1km
 
     // Generar MUCHAS microzonas pequeñas (20-40)
-    const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
+    const yearsToGenerate = [2015, 2018, 2020, 2023, 2024, 2025];
     const numPolygons = Math.floor(Math.random() * 21) + 20; // 20-40 microzonas
 
     let generatedData = [];
