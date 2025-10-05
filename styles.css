@@ -505,6 +505,13 @@ body {
     box-shadow: 0 4px 16px var(--shadow);
     min-width: 300px;
     max-width: 350px;
+    transition: all 0.3s ease;
+}
+
+.timeline-control.collapsed {
+    min-width: 60px;
+    max-width: 250px;
+    padding: 0.75rem 1rem;
 }
 
 .timeline-header {
@@ -512,6 +519,48 @@ body {
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
+}
+
+.toggle-panel-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.toggle-panel-btn:hover {
+    background: var(--bg-primary);
+    color: var(--accent-primary);
+}
+
+.toggle-panel-btn svg {
+    transition: transform 0.2s ease;
+}
+
+.timeline-content {
+    transition: all 0.3s ease;
+}
+
+.timeline-summary {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    padding: 0.5rem;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.timeline-summary:hover {
+    background: var(--accent-light);
+    color: var(--accent-primary);
 }
 
 .timeline-icon {

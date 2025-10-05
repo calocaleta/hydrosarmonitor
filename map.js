@@ -27,7 +27,7 @@ let currentYear = MAP_CONFIG.timelineEnd; // Iniciar en 2025 para mostrar todos 
 let predictionMode = false;
 let currentZoomLevel = 11;
 let cumulativeMode = true; // Modo acumulado activado por defecto
-let minHumidityThreshold = 0.5; // Umbral mínimo de humedad (50% por defecto)
+let minHumidityThreshold = 0.8; // Umbral mínimo de humedad (80% por defecto)
 let currentOpenPopup = null; // Trackear popup abierto actualmente
 let showFloodData = true; // Mostrar inundaciones (activo por defecto)
 let showMoistureData = false; // Mostrar humedad (inactivo por defecto)
@@ -845,10 +845,16 @@ function initializeTimelineSlider() {
 
             container.innerHTML = `
                 <div class="timeline-header">
+                    <button id="toggle-panel" class="toggle-panel-btn" title="Colapsar panel">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
                     <span class="timeline-icon">📅</span>
                     <span class="timeline-title">Línea temporal</span>
                     <span class="timeline-year" id="timeline-year">${MAP_CONFIG.timelineEnd}</span>
                 </div>
+                <div class="timeline-content" id="timeline-content">
                 <div class="timeline-mode-toggle">
                     <button id="cumulative-toggle" class="cumulative-button active">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -876,7 +882,7 @@ function initializeTimelineSlider() {
                     <div class="humidity-header">
                         <span class="humidity-icon">💧</span>
                         <span class="humidity-title">Humedad mínima</span>
-                        <span class="humidity-value" id="humidity-value">50%</span>
+                        <span class="humidity-value" id="humidity-value">80%</span>
                     </div>
                     <input
                         type="range"
@@ -884,7 +890,7 @@ function initializeTimelineSlider() {
                         class="humidity-slider"
                         min="0"
                         max="100"
-                        value="50"
+                        value="80"
                         step="5"
                     >
                     <div class="humidity-labels">
@@ -911,6 +917,10 @@ function initializeTimelineSlider() {
                         </span>
                     </label>
                 </div>
+                </div>
+                <div class="timeline-summary" id="timeline-summary" style="display: none;">
+                    <span id="summary-text"></span>
+                </div>
             `;
 
             L.DomEvent.disableClickPropagation(container);
@@ -922,12 +932,16 @@ function initializeTimelineSlider() {
                 const humiditySlider = document.getElementById('humidity-slider');
                 const showFlood = document.getElementById('show-flood');
                 const showMoisture = document.getElementById('show-moisture');
+                const togglePanelBtn = document.getElementById('toggle-panel');
+                const timelineSummary = document.getElementById('timeline-summary');
 
                 slider.addEventListener('input', handleTimelineChange);
                 cumulativeToggle.addEventListener('click', toggleCumulativeMode);
                 humiditySlider.addEventListener('input', handleHumidityChange);
                 showFlood.addEventListener('change', toggleDataTypeVisibility);
                 showMoisture.addEventListener('change', toggleDataTypeVisibility);
+                togglePanelBtn.addEventListener('click', toggleTimelinePanel);
+                timelineSummary.addEventListener('click', toggleTimelinePanel);
             }, 100);
 
             return container;
@@ -935,6 +949,59 @@ function initializeTimelineSlider() {
     });
 
     map.addControl(new sliderControl());
+}
+
+/**
+ * Alterna el panel de timeline (colapsar/expandir)
+ */
+function toggleTimelinePanel() {
+    const content = document.getElementById('timeline-content');
+    const summary = document.getElementById('timeline-summary');
+    const toggleBtn = document.getElementById('toggle-panel');
+    const control = document.querySelector('.timeline-control');
+
+    if (content.style.display === 'none') {
+        // Expandir
+        content.style.display = 'block';
+        summary.style.display = 'none';
+        control.classList.remove('collapsed');
+        toggleBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        `;
+        toggleBtn.title = 'Colapsar panel';
+    } else {
+        // Colapsar
+        content.style.display = 'none';
+        summary.style.display = 'block';
+        control.classList.add('collapsed');
+        toggleBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        `;
+        toggleBtn.title = 'Expandir panel';
+
+        // Actualizar el resumen con los datos seleccionados
+        updatePanelSummary();
+    }
+}
+
+/**
+ * Actualiza el texto del resumen cuando el panel está colapsado
+ */
+function updatePanelSummary() {
+    const summaryText = document.getElementById('summary-text');
+    const year = currentYear;
+    const humidity = Math.round(minHumidityThreshold * 100);
+    const mode = cumulativeMode ? 'Acumulado' : 'Año específico';
+
+    const filters = [];
+    if (showFloodData) filters.push('🌊');
+    if (showMoistureData) filters.push('💧');
+
+    summaryText.textContent = `${year} | ${humidity}% | ${mode} | ${filters.join(' ')}`;
 }
 
 /**
