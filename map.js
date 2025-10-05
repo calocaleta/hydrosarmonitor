@@ -702,12 +702,23 @@ function createSARPolygon(data, year) {
     let color;
 
     if (data.dataType === 'moisture') {
-        // HUMEDAD DE SUELO: Escala de grises (más oscuro = más humedad)
-        const grayValue = Math.floor(100 + (data.intensity * 100)); // 100-200 rango
-        color = `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
+        // HUMEDAD DE SUELO: Marrón claro (antiguo) a marrón oscuro (reciente)
+        if (isRecent) {
+            // Datos recientes: marrón oscuro/intenso
+            color = '#654321'; // Marrón oscuro
+        } else {
+            // Datos antiguos: marrón claro
+            color = '#D2B48C'; // Tan/marrón claro
+        }
     } else {
-        // INUNDACIÓN: Celeste a azul (más oscuro = más reciente)
-        color = isRecent ? '#2563eb' : '#60a5fa'; // Azul oscuro (reciente) vs celeste (antiguo)
+        // INUNDACIÓN: Celeste claro (antiguo) a celeste intenso (reciente)
+        if (isRecent) {
+            // Datos recientes: celeste intenso/oscuro
+            color = '#5B9AA9'; // Celeste intenso
+        } else {
+            // Datos antiguos: celeste claro
+            color = '#AAD3DF'; // Celeste claro
+        }
     }
 
     // Transparencia proporcional a humedad/intensidad
@@ -752,7 +763,9 @@ function createSARPolygon(data, year) {
     // Determinar icono y color según tipo de dato
     const isMoistureType = data.dataType === 'moisture';
     const icon = isMoistureType ? '💧' : '🌊';
-    const yearBgColor = isMoistureType ? '#6b7280' : (isRecent ? '#2563eb' : '#60a5fa');
+
+    // Color de fondo del año en el popup (usa el mismo color que el polígono)
+    const yearBgColor = color;
 
     // Popup con diseño minimalista
     const popupContent = `
@@ -1097,10 +1110,19 @@ function updateLayerOpacityByYear(endYear) {
     // Función helper para actualizar capas
     const updateLayer = (layer) => {
         const layerYear = layer.options.year;
-
-        // Determinar color según antigüedad (azul = reciente, celeste = antiguo)
         const isRecent = layerYear >= 2023;
-        const color = isRecent ? '#2563eb' : '#60a5fa';
+
+        // Determinar color según tipo de dato y antigüedad
+        let color;
+        const isMoisture = layer.options.dataType === 'moisture';
+
+        if (isMoisture) {
+            // HUMEDAD DE SUELO: Marrón oscuro (reciente) a marrón claro (antiguo)
+            color = isRecent ? '#654321' : '#D2B48C';
+        } else {
+            // INUNDACIÓN: Celeste intenso (reciente) a celeste claro (antiguo)
+            color = isRecent ? '#5B9AA9' : '#AAD3DF';
+        }
 
         // Transparencia basada en intensidad/humedad usando umbral dinámico
         const opacityRange = 1.0 - minHumidityThreshold;
@@ -1113,8 +1135,8 @@ function updateLayerOpacityByYear(endYear) {
                     color: color,
                     fillColor: color,
                     fillOpacity: fillOpacity,
-                    opacity: 0.4,
-                    weight: 1
+                    opacity: 0, // Sin borde por defecto
+                    weight: 2
                 });
 
                 // Mostrar el layer con animación
@@ -1137,8 +1159,8 @@ function updateLayerOpacityByYear(endYear) {
                     color: color,
                     fillColor: color,
                     fillOpacity: fillOpacity,
-                    opacity: 0.4,
-                    weight: 1
+                    opacity: 0, // Sin borde por defecto
+                    weight: 2
                 });
 
                 // Mostrar el layer
