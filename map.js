@@ -27,6 +27,7 @@ let currentYear = MAP_CONFIG.timelineEnd; // Iniciar en 2025 para mostrar todos 
 let predictionMode = false;
 let currentZoomLevel = 11;
 let cumulativeMode = true; // Modo acumulado activado por defecto
+let minHumidityThreshold = 0.5; // Umbral mínimo de humedad (50% por defecto)
 
 // Configuración de niveles de detalle (LOD)
 const LOD_CONFIG = {
@@ -667,8 +668,8 @@ function loadSARDataForLocation(lat, lng, locationName) {
  * @returns {L.Polygon} Polígono de Leaflet
  */
 function createSARPolygon(data, year) {
-    // Solo crear polígonos con intensidad >= 0.5 (50% o más de humedad)
-    if (data.intensity < 0.5) {
+    // Solo crear polígonos con intensidad >= umbral mínimo configurado
+    if (data.intensity < minHumidityThreshold) {
         return null;
     }
 
@@ -679,17 +680,18 @@ function createSARPolygon(data, year) {
     const color = isRecent ? '#2563eb' : '#60a5fa'; // Azul oscuro vs celeste
 
     // Transparencia proporcional a humedad/intensidad
-    // Mapear rango 0.5-1.0 a rango de opacidad 0.0-1.0
-    // 50% humedad (0.5) → 100% transparencia (0.0)
-    // 100% humedad (1.0) → 0% transparencia (1.0)
-    const fillOpacity = (data.intensity - 0.5) * 2;
+    // Mapear rango [minHumidityThreshold - 1.0] a rango de opacidad [0.0 - 1.0]
+    // humedad mínima → 0% opacidad (casi transparente)
+    // 100% humedad (1.0) → 100% opacidad (completamente visible)
+    const opacityRange = 1.0 - minHumidityThreshold;
+    const fillOpacity = opacityRange > 0 ? (data.intensity - minHumidityThreshold) / opacityRange : 1.0;
 
     const polygon = L.polygon(data.coords, {
         color: color,
         fillColor: color,
         fillOpacity: fillOpacity,
-        weight: 1, // Borde muy delgado (1 pixel)
-        opacity: 0.4, // Borde semi-transparente
+        weight: 2, // Borde visible al hacer hover
+        opacity: 0, // Sin borde por defecto
         className: 'sar-polygon' // Para animaciones CSS
     });
 
@@ -700,6 +702,19 @@ function createSARPolygon(data, year) {
     // Aplicar animación de "gota que se desparrama" cuando se añade al mapa
     polygon.on('add', function() {
         animateDropSplash(polygon);
+    });
+
+    // Mostrar borde al pasar el mouse
+    polygon.on('mouseover', function() {
+        this.setStyle({
+            opacity: 0.8 // Mostrar borde al hacer hover
+        });
+    });
+
+    polygon.on('mouseout', function() {
+        this.setStyle({
+            opacity: 0 // Ocultar borde al salir
+        });
     });
 
     // Popup con información
@@ -799,6 +814,26 @@ function initializeTimelineSlider() {
                         <span>${MAP_CONFIG.timelineEnd}</span>
                     </div>
                 </div>
+                <div class="humidity-slider-container">
+                    <div class="humidity-header">
+                        <span class="humidity-icon">💧</span>
+                        <span class="humidity-title">Humedad mínima</span>
+                        <span class="humidity-value" id="humidity-value">50%</span>
+                    </div>
+                    <input
+                        type="range"
+                        id="humidity-slider"
+                        class="humidity-slider"
+                        min="0"
+                        max="100"
+                        value="50"
+                        step="5"
+                    >
+                    <div class="humidity-labels">
+                        <span>0%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
             `;
 
             L.DomEvent.disableClickPropagation(container);
@@ -807,9 +842,11 @@ function initializeTimelineSlider() {
             setTimeout(() => {
                 const slider = document.getElementById('timeline-slider');
                 const cumulativeToggle = document.getElementById('cumulative-toggle');
+                const humiditySlider = document.getElementById('humidity-slider');
 
                 slider.addEventListener('input', handleTimelineChange);
                 cumulativeToggle.addEventListener('click', toggleCumulativeMode);
+                humiditySlider.addEventListener('input', handleHumidityChange);
             }, 100);
 
             return container;
@@ -845,6 +882,24 @@ function toggleCumulativeMode() {
 }
 
 /**
+ * Maneja cambios en el slider de humedad
+ * @param {Event} e - Evento del slider
+ */
+function handleHumidityChange(e) {
+    const percentage = parseInt(e.target.value);
+    minHumidityThreshold = percentage / 100; // Convertir porcentaje a decimal (0.0 - 1.0)
+
+    // Actualizar display del porcentaje
+    document.getElementById('humidity-value').textContent = percentage + '%';
+
+    // Recargar todos los datos con el nuevo umbral
+    loadDataForCurrentZoom();
+
+    // Feedback visual
+    showTemporaryNotification(`Mostrando zonas con ≥${percentage}% de humedad`);
+}
+
+/**
  * Maneja cambios en el slider temporal
  * @param {Event} e - Evento del slider
  */
@@ -875,11 +930,9 @@ function updateLayerOpacityByYear(endYear) {
         const isRecent = layerYear >= 2023;
         const color = isRecent ? '#2563eb' : '#60a5fa';
 
-        // Transparencia basada en intensidad/humedad
-        // Mapear rango 0.5-1.0 a rango de opacidad 0.0-1.0
-        // 50% humedad (0.5) → 100% transparencia (0.0)
-        // 100% humedad (1.0) → 0% transparencia (1.0)
-        const fillOpacity = (layer.options.baseIntensity - 0.5) * 2;
+        // Transparencia basada en intensidad/humedad usando umbral dinámico
+        const opacityRange = 1.0 - minHumidityThreshold;
+        const fillOpacity = opacityRange > 0 ? (layer.options.baseIntensity - minHumidityThreshold) / opacityRange : 1.0;
 
         if (cumulativeMode) {
             // MODO ACUMULADO: Mostrar desde 2015 hasta el año seleccionado

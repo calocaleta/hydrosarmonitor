@@ -634,6 +634,98 @@ body {
         var(--accent-primary) 100%);
 }
 
+/* ========================================
+   SLIDER DE HUMEDAD
+   ======================================== */
+
+.humidity-slider-container {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.humidity-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.humidity-icon {
+    font-size: 1.2rem;
+}
+
+.humidity-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.humidity-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent-primary);
+    background: var(--accent-light);
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+}
+
+.humidity-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right,
+        var(--accent-light) 0%,
+        #60a5fa 50%,
+        #2563eb 100%);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.humidity-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: all 0.2s ease;
+}
+
+.humidity-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: var(--accent-secondary);
+}
+
+.humidity-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: all 0.2s ease;
+}
+
+.humidity-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    background: var(--accent-secondary);
+}
+
+.humidity-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
 /* Slider en modo año específico (gris) */
 .timeline-slider:not(.cumulative) {
     background: var(--accent-light);
