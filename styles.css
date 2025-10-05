@@ -2903,20 +2903,7 @@ body {
     30% { transform: translateY(-30px); }
 }
 
-/* Animación de borde rojo pulsante para resaltar región */
-@keyframes pulse-highlight {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.6;
-    }
-}
-
-.animated-highlight-border {
-    animation: pulse-highlight 0.8s ease-in-out 3;
-    transition: opacity 0.3s ease;
-}
+/* Animación removida - ahora se usa efecto de parpadeo nativo en el polígono */
 
 .loading-status {
     font-size: 1.1rem;
@@ -2992,6 +2979,26 @@ body {
 /* ========================================
    HISTORICAL EVENTS DROPDOWN
    ======================================== */
+
+/* Overlay oscuro de fondo */
+.dropdown-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s ease, background 0.3s ease;
+    pointer-events: none;
+}
+
+.dropdown-overlay.visible {
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 1;
+    pointer-events: auto;
+}
 
 .historical-dropdown {
     position: fixed;

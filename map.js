@@ -31,7 +31,6 @@ let minHumidityThreshold = 0.8; // Umbral mínimo de humedad (80% por defecto)
 let currentOpenPopup = null; // Trackear popup abierto actualmente
 let showFloodData = true; // Mostrar inundaciones (activo por defecto)
 let showMoistureData = false; // Mostrar humedad (inactivo por defecto)
-let activeHighlightPolygon = null; // Polígono de borde rojo activo
 
 // Configuración de niveles de detalle (LOD)
 const LOD_CONFIG = {
@@ -246,6 +245,7 @@ function addMapMovementListeners() {
         clearTimeout(moveTimeout);
         moveTimeout = setTimeout(() => {
             loadDataForCurrentZoom();
+            updateHistoricalBadge(); // Actualizar contador de históricos cercanos
         }, 500);
     });
 
@@ -1708,12 +1708,63 @@ let historicalEvents = [];
 let dropdownVisible = false;
 
 /**
+ * Actualiza el badge de históricos según la ubicación actual
+ */
+function updateHistoricalBadge() {
+    if (!map || historicalEvents.length === 0) return;
+
+    const nearbyEvents = filterEventsByLocation(historicalEvents, 50);
+    const historicalCountEl = document.getElementById('status-count-historical');
+
+    if (historicalCountEl) {
+        historicalCountEl.textContent = nearbyEvents.length;
+    }
+
+    console.log(`📍 Históricos cercanos: ${nearbyEvents.length} eventos`);
+}
+
+/**
  * Inicializa el dropdown de eventos históricos
  */
 function initializeHistoricalEventsTour() {
     // Recopilar todos los eventos históricos verificados
     historicalEvents = [];
 
+    // Extraer eventos históricos de los datos SAR
+    console.log('📊 Extrayendo eventos históricos de datos SAR...');
+
+    if (SAR_DATA) {
+        Object.keys(SAR_DATA).forEach(year => {
+            if (!SAR_DATA[year]) return;
+
+            // Filtrar solo eventos de alta intensidad (>= 70%)
+            const highIntensityEvents = SAR_DATA[year].filter(event =>
+                event.intensity >= 0.70 &&
+                event.dataType === 'flood' &&
+                event.coords &&
+                event.coords.length > 0
+            );
+
+            // Agrupar eventos cercanos (dentro de 500m)
+            const groupedEvents = groupNearbyEvents(highIntensityEvents, 0.5);
+
+            // Convertir grupos en eventos históricos
+            groupedEvents.forEach((group, index) => {
+                const avgIntensity = group.reduce((sum, e) => sum + e.intensity, 0) / group.length;
+
+                historicalEvents.push({
+                    year: year,
+                    name: `Evento SAR ${year} #${index + 1}`,
+                    coords: group[0].coords, // Usar coords del primer evento del grupo
+                    intensity: avgIntensity,
+                    source: `Sentinel-1 SAR (${group.length} detecciones)`,
+                    dataType: 'flood'
+                });
+            });
+        });
+    }
+
+    // OPCIÓN 2: Agregar eventos verificados de REAL_FLOOD_DATA (si existen)
     if (window.REAL_FLOOD_DATA) {
         Object.keys(window.REAL_FLOOD_DATA).forEach(year => {
             window.REAL_FLOOD_DATA[year].forEach(event => {
@@ -1723,7 +1774,7 @@ function initializeHistoricalEventsTour() {
                         name: event.name,
                         coords: event.coords,
                         intensity: event.intensity,
-                        source: event.source,
+                        source: event.source + ' (Verificado)',
                         dataType: event.dataType
                     });
                 }
@@ -1736,6 +1787,9 @@ function initializeHistoricalEventsTour() {
     // Crear dropdown
     createHistoricalEventsDropdown();
 
+    // Actualizar badge inicial
+    updateHistoricalBadge();
+
     // Agregar evento click al badge de históricos
     const statusItem = document.getElementById('status-count-historical');
     if (statusItem && historicalEvents.length > 0) {
@@ -1745,10 +1799,102 @@ function initializeHistoricalEventsTour() {
         const historicalStatusDiv = statusItem.parentElement;
         if (historicalStatusDiv) {
             historicalStatusDiv.classList.add('clickable');
-            historicalStatusDiv.title = '🗺️ Ver lista de eventos históricos';
+            historicalStatusDiv.title = '🗺️ Ver lista de eventos históricos cercanos';
             historicalStatusDiv.addEventListener('click', toggleHistoricalEventsDropdown);
         }
     }
+}
+
+/**
+ * Calcula distancia entre dos puntos geográficos (fórmula de Haversine)
+ */
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distancia en km
+}
+
+/**
+ * Calcula el centro geográfico de un polígono
+ */
+function calculateEventCenter(coords) {
+    if (!coords || coords.length === 0) return [0, 0];
+
+    let sumLat = 0, sumLng = 0;
+    coords.forEach(coord => {
+        sumLat += coord[0];
+        sumLng += coord[1];
+    });
+
+    return [sumLat / coords.length, sumLng / coords.length];
+}
+
+/**
+ * Agrupa eventos cercanos para evitar duplicados
+ */
+function groupNearbyEvents(events, maxDistanceKm = 0.5) {
+    const groups = [];
+    const processed = new Set();
+
+    events.forEach((event, index) => {
+        if (processed.has(index)) return;
+
+        const group = [event];
+        processed.add(index);
+
+        const center1 = calculateEventCenter(event.coords);
+
+        // Buscar eventos cercanos
+        events.forEach((otherEvent, otherIndex) => {
+            if (otherIndex <= index || processed.has(otherIndex)) return;
+
+            const center2 = calculateEventCenter(otherEvent.coords);
+            const distance = calculateDistance(center1[0], center1[1], center2[0], center2[1]);
+
+            if (distance <= maxDistanceKm) {
+                group.push(otherEvent);
+                processed.add(otherIndex);
+            }
+        });
+
+        groups.push(group);
+    });
+
+    return groups;
+}
+
+/**
+ * Filtra eventos históricos según la ubicación actual del mapa
+ */
+function filterEventsByLocation(events, maxDistance = 50) {
+    const mapCenter = map.getCenter();
+    const centerLat = mapCenter.lat;
+    const centerLng = mapCenter.lng;
+
+    return events
+        .map((event, originalIndex) => {
+            // Calcular centro del evento
+            let eventLat = 0, eventLng = 0;
+            event.coords.forEach(coord => {
+                eventLat += coord[0];
+                eventLng += coord[1];
+            });
+            eventLat /= event.coords.length;
+            eventLng /= event.coords.length;
+
+            // Calcular distancia
+            const distance = calculateDistance(centerLat, centerLng, eventLat, eventLng);
+
+            return { ...event, originalIndex, distance };
+        })
+        .filter(event => event.distance <= maxDistance)
+        .sort((a, b) => a.distance - b.distance); // Ordenar por cercanía
 }
 
 /**
@@ -1760,6 +1906,18 @@ function createHistoricalEventsDropdown() {
     if (existingDropdown) {
         existingDropdown.remove();
     }
+    const existingOverlay = document.getElementById('dropdown-overlay');
+    if (existingOverlay) {
+        existingOverlay.remove();
+    }
+
+    // Crear overlay oscuro de fondo
+    const overlay = document.createElement('div');
+    overlay.id = 'dropdown-overlay';
+    overlay.className = 'dropdown-overlay';
+    overlay.style.display = 'none';
+    overlay.addEventListener('click', toggleHistoricalEventsDropdown);
+    document.body.appendChild(overlay);
 
     // Crear contenedor del dropdown
     const dropdown = document.createElement('div');
@@ -1767,11 +1925,15 @@ function createHistoricalEventsDropdown() {
     dropdown.className = 'historical-dropdown';
     dropdown.style.display = 'none';
 
+    // Filtrar eventos por ubicación (50 km de radio)
+    const nearbyEvents = filterEventsByLocation(historicalEvents, 50);
+
     // Header del dropdown
     const header = document.createElement('div');
     header.className = 'dropdown-header';
+    const mapCenter = map.getCenter();
     header.innerHTML = `
-        <h3>📍 Eventos Históricos Verificados</h3>
+        <h3>📍 Eventos Históricos Cercanos (${nearbyEvents.length})</h3>
         <button class="dropdown-close" id="close-dropdown">×</button>
     `;
 
@@ -1779,14 +1941,22 @@ function createHistoricalEventsDropdown() {
     const list = document.createElement('div');
     list.className = 'dropdown-list';
 
-    // Agrupar eventos por año
-    const eventsByYear = {};
-    historicalEvents.forEach((event, index) => {
-        if (!eventsByYear[event.year]) {
-            eventsByYear[event.year] = [];
-        }
-        eventsByYear[event.year].push({ ...event, index });
-    });
+    if (nearbyEvents.length === 0) {
+        list.innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                <p>📍 No hay eventos históricos registrados en esta área</p>
+                <p style="font-size: 0.85rem; margin-top: 0.5rem;">Mueve el mapa a Lima, Perú para ver eventos del Niño Costero 2017</p>
+            </div>
+        `;
+    } else {
+        // Agrupar eventos por año
+        const eventsByYear = {};
+        nearbyEvents.forEach((event) => {
+            if (!eventsByYear[event.year]) {
+                eventsByYear[event.year] = [];
+            }
+            eventsByYear[event.year].push(event);
+        });
 
     // Crear items agrupados por año
     Object.keys(eventsByYear).sort((a, b) => b - a).forEach(year => {
@@ -1800,10 +1970,11 @@ function createHistoricalEventsDropdown() {
         eventsByYear[year].forEach(event => {
             const item = document.createElement('div');
             item.className = 'dropdown-item';
-            item.dataset.index = event.index;
+            item.dataset.index = event.originalIndex;
 
             const icon = event.dataType === 'flood' ? '🌊' : '💧';
             const intensityPercent = (event.intensity * 100).toFixed(0);
+            const distanceKm = event.distance.toFixed(1);
 
             item.innerHTML = `
                 <div class="dropdown-item-icon">${icon}</div>
@@ -1812,14 +1983,16 @@ function createHistoricalEventsDropdown() {
                     <div class="dropdown-item-meta">
                         <span class="dropdown-item-source">📊 ${event.source}</span>
                         <span class="dropdown-item-intensity">${intensityPercent}%</span>
+                        <span class="dropdown-item-distance">📏 ${distanceKm} km</span>
                     </div>
                 </div>
             `;
 
-            item.addEventListener('click', () => navigateToEvent(event.index));
+            item.addEventListener('click', () => navigateToEvent(event.originalIndex));
             list.appendChild(item);
         });
     });
+    }
 
     dropdown.appendChild(header);
     dropdown.appendChild(list);
@@ -1855,9 +2028,20 @@ function toggleHistoricalEventsDropdown(event) {
         return;
     }
 
+    const overlay = document.getElementById('dropdown-overlay');
+
     dropdownVisible = !dropdownVisible;
 
     if (dropdownVisible) {
+        // Mostrar overlay y dropdown
+        if (overlay) {
+            overlay.style.display = 'block';
+            overlay.offsetHeight; // Trigger reflow
+            requestAnimationFrame(() => {
+                overlay.classList.add('visible');
+            });
+        }
+
         // Forzar reflow para asegurar animación suave
         dropdown.style.display = 'block';
         dropdown.offsetHeight; // Trigger reflow
@@ -1865,6 +2049,14 @@ function toggleHistoricalEventsDropdown(event) {
             dropdown.classList.add('visible');
         });
     } else {
+        // Ocultar overlay y dropdown
+        if (overlay) {
+            overlay.classList.remove('visible');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        }
+
         dropdown.classList.remove('visible');
         setTimeout(() => {
             dropdown.style.display = 'none';
@@ -1948,42 +2140,9 @@ function navigateToEvent(eventIndex) {
     centerLng /= event.coords.length;
 
     // ==========================================
-    // PASO 2.1: CREAR BORDE ROJO PERSISTENTE
+    // PASO 2.1: PREPARAR EFECTO DE PARPADEO
     // ==========================================
-
-    // Remover borde rojo anterior con animación de desvanecimiento
-    if (activeHighlightPolygon) {
-        const oldPolygon = activeHighlightPolygon;
-        let currentOpacity = 1.0;
-        const fadeInterval = setInterval(() => {
-            currentOpacity -= 0.1;
-            if (currentOpacity <= 0) {
-                clearInterval(fadeInterval);
-                if (map.hasLayer(oldPolygon)) {
-                    map.removeLayer(oldPolygon);
-                }
-            } else {
-                oldPolygon.setStyle({ opacity: currentOpacity });
-            }
-        }, 30); // Desvanecimiento rápido del anterior
-    }
-
-    // Crear nuevo polígono con borde rojo que resalta el área del evento
-    activeHighlightPolygon = L.polygon(event.coords, {
-        color: '#ff0000',
-        weight: 5,
-        opacity: 0,
-        fillOpacity: 0,
-        className: 'animated-highlight-border'
-    }).addTo(map);
-
-    // Animar aparición del borde rojo con efecto de pulso
-    setTimeout(() => {
-        activeHighlightPolygon.setStyle({ opacity: 1 });
-    }, 100);
-
-    // El borde rojo permanece hasta que se seleccione otro evento
-    // (se elimina solo cuando activeHighlightPolygon es reemplazado arriba)
+    // El efecto de parpadeo se aplicará después de encontrar el polígono
 
     // Cerrar dropdown
     toggleHistoricalEventsDropdown();
@@ -2055,10 +2214,42 @@ function navigateToEvent(eventIndex) {
             }
         });
 
-        // Si encontramos el polígono, abrirle el popup
-        if (eventPolygon && eventPolygon.getPopup()) {
-            eventPolygon.openPopup();
-            console.log('✅ Popup abierto en polígono del evento');
+        // Si encontramos el polígono, aplicar efecto de parpadeo tipo hover y abrir popup
+        if (eventPolygon) {
+            console.log('✅ Polígono encontrado, aplicando efecto de parpadeo tipo hover');
+
+            // Efecto de parpadeo simulando mouseover/mouseout (4 veces)
+            let blinkCount = 0;
+            const blinkInterval = setInterval(() => {
+                if (blinkCount >= 8) { // 4 parpadeos completos (hover in/out)
+                    clearInterval(blinkInterval);
+                    // Dejar en estado normal (sin borde)
+                    eventPolygon.setStyle({
+                        opacity: 0
+                    });
+                    return;
+                }
+
+                // Alternar entre hover (visible) y normal (invisible)
+                if (blinkCount % 2 === 0) {
+                    // Simular mouseover - mostrar borde
+                    eventPolygon.setStyle({
+                        opacity: 0.8
+                    });
+                } else {
+                    // Simular mouseout - ocultar borde
+                    eventPolygon.setStyle({
+                        opacity: 0
+                    });
+                }
+                blinkCount++;
+            }, 400); // Parpadeo cada 400ms (más natural)
+
+            // Abrir popup inmediatamente
+            if (eventPolygon.getPopup()) {
+                eventPolygon.openPopup();
+                console.log('✅ Popup abierto');
+            }
         } else {
             // Si no se encontró, crear popup independiente
             console.log('⚠️ Polígono no encontrado, creando popup independiente');
