@@ -133,8 +133,8 @@ function initializeMap() {
     // Control de capas
     // addLayerControl(); // Removido - ahora todo se controla desde el slider temporal
 
-    // Buscador de localidades
-    addSearchControl();
+    // Buscador de localidades (oculto - se puede buscar desde el formulario principal)
+    // addSearchControl();
 
     // Inicializar el zoom actual
     currentZoomLevel = map.getZoom();
@@ -826,16 +826,16 @@ function initializeTimelineSlider() {
 
             container.innerHTML = `
                 <div class="timeline-header">
-                    <button id="toggle-panel" class="toggle-panel-btn" title="Minimizar panel">
+                    <button id="toggle-panel" class="toggle-panel-btn" title="Expandir panel">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
+                            <polyline points="18 15 12 9 6 15"></polyline>
                         </svg>
                     </button>
                     <span class="timeline-icon">📅</span>
                     <span class="timeline-title">Línea temporal</span>
                     <span class="timeline-year" id="timeline-year">${MAP_CONFIG.timelineEnd}</span>
                 </div>
-                <div class="timeline-content" id="timeline-content">
+                <div class="timeline-content" id="timeline-content" style="display: none;">
                 <div class="timeline-mode-toggle">
                     <button id="cumulative-toggle" class="cumulative-button active">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -899,10 +899,13 @@ function initializeTimelineSlider() {
                     </label>
                 </div>
                 </div>
-                <div class="timeline-summary" id="timeline-summary" style="display: none;">
+                <div class="timeline-summary" id="timeline-summary" style="display: block;">
                     <span id="summary-text"></span>
                 </div>
             `;
+
+            // Agregar clase collapsed al inicio
+            container.classList.add('collapsed');
 
             L.DomEvent.disableClickPropagation(container);
 
@@ -923,6 +926,9 @@ function initializeTimelineSlider() {
                 showMoisture.addEventListener('change', toggleDataTypeVisibility);
                 togglePanelBtn.addEventListener('click', toggleTimelinePanel);
                 timelineSummary.addEventListener('click', toggleTimelinePanel);
+
+                // Inicializar el resumen al inicio
+                updatePanelSummary();
             }, 100);
 
             return container;
