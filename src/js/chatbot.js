@@ -142,8 +142,8 @@ let typingTimeout = null;
 function initializeChatbot() {
     console.log('💬 Inicializando chatbot educativo...');
 
-    // Crear botón flotante
-    createChatButton();
+    // Crear botón flotante (deshabilitado - ahora está en el mapa)
+    // createChatButton();
 
     // Inicializar historial
     conversationHistory = [...WELCOME_MESSAGES];

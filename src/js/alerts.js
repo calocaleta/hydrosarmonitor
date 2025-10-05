@@ -78,8 +78,8 @@ function initializeAlertSystem() {
     // Renderizar zonas de riesgo en el mapa
     renderRiskZones();
 
-    // Crear botón flotante de reporte
-    createReportButton();
+    // Crear botón flotante de reporte (deshabilitado - ahora está en el mapa)
+    // createReportButton();
 
     // Verificar alertas periódicamente
     setInterval(checkUserInRiskZone, ALERT_CONFIG.checkInterval);
