@@ -23,26 +23,37 @@ let currentYear = MAP_CONFIG.timelineEnd; // Iniciar en 2025 para mostrar todos 
 let predictionMode = false;
 
 // Datos simulados SAR (en producción, estos vendrían de la API de NASA)
+// Ahora con microzonas más pequeñas y realistas para Lima
 const SAR_DATA = {
     // Estructura: año -> array de polígonos con coordenadas e intensidad
     2015: [
-        { coords: [[-12.05, -77.05], [-12.05, -77.04], [-12.04, -77.04], [-12.04, -77.05]], intensity: 0.6, type: 'historical' },
-        { coords: [[-12.06, -77.06], [-12.06, -77.05], [-12.05, -77.05], [-12.05, -77.06]], intensity: 0.4, type: 'historical' }
+        // Microzonas en San Juan de Lurigancho
+        { coords: [[-12.0050, -77.0050], [-12.0050, -77.0045], [-12.0045, -77.0045], [-12.0045, -77.0050]], intensity: 0.6, type: 'historical' },
+        { coords: [[-12.0060, -77.0060], [-12.0060, -77.0055], [-12.0055, -77.0055], [-12.0055, -77.0060]], intensity: 0.4, type: 'historical' },
+        { coords: [[-12.0070, -77.0070], [-12.0068, -77.0068], [-12.0065, -77.0070]], intensity: 0.5, type: 'historical' }
     ],
     2018: [
-        { coords: [[-12.045, -77.048], [-12.045, -77.038], [-12.035, -77.038], [-12.035, -77.048]], intensity: 0.8, type: 'historical' },
-        { coords: [[-12.055, -77.055], [-12.055, -77.045], [-12.045, -77.045], [-12.045, -77.055]], intensity: 0.7, type: 'historical' }
+        // Microzonas en La Molina / Ate
+        { coords: [[-12.0450, -77.0480], [-12.0450, -77.0475], [-12.0445, -77.0475], [-12.0445, -77.0480]], intensity: 0.8, type: 'historical' },
+        { coords: [[-12.0550, -77.0550], [-12.0548, -77.0545], [-12.0545, -77.0548]], intensity: 0.7, type: 'historical' },
+        { coords: [[-12.0460, -77.0490], [-12.0458, -77.0488], [-12.0455, -77.0490]], intensity: 0.65, type: 'historical' }
     ],
     2020: [
-        { coords: [[-12.04, -77.05], [-12.04, -77.04], [-12.03, -77.04], [-12.03, -77.05]], intensity: 0.5, type: 'historical' }
+        // Microzonas en Chorrillos / Villa El Salvador
+        { coords: [[-12.1850, -77.0150], [-12.1848, -77.0145], [-12.1845, -77.0148]], intensity: 0.5, type: 'historical' },
+        { coords: [[-12.1900, -77.0200], [-12.1898, -77.0198], [-12.1895, -77.0200]], intensity: 0.55, type: 'historical' }
     ],
     2023: [
-        { coords: [[-12.048, -77.046], [-12.048, -77.036], [-12.038, -77.036], [-12.038, -77.046]], intensity: 0.9, type: 'recent' },
-        { coords: [[-12.058, -77.056], [-12.058, -77.046], [-12.048, -77.046], [-12.048, -77.056]], intensity: 0.75, type: 'recent' }
+        // Microzonas recientes en Comas
+        { coords: [[-11.9380, -77.0460], [-11.9378, -77.0458], [-11.9375, -77.0460]], intensity: 0.9, type: 'recent' },
+        { coords: [[-11.9400, -77.0480], [-11.9400, -77.0475], [-11.9395, -77.0475], [-11.9395, -77.0480]], intensity: 0.75, type: 'recent' },
+        { coords: [[-11.9420, -77.0500], [-11.9418, -77.0498], [-11.9415, -77.0500]], intensity: 0.8, type: 'recent' }
     ],
     2024: [
-        { coords: [[-12.042, -77.044], [-12.042, -77.034], [-12.032, -77.034], [-12.032, -77.044]], intensity: 0.85, type: 'recent' },
-        { coords: [[-12.052, -77.054], [-12.052, -77.044], [-12.042, -77.044], [-12.042, -77.054]], intensity: 0.7, type: 'recent' }
+        // Microzonas recientes en Independencia / Los Olivos
+        { coords: [[-11.9920, -77.0540], [-11.9918, -77.0538], [-11.9915, -77.0540]], intensity: 0.85, type: 'recent' },
+        { coords: [[-12.0020, -77.0640], [-12.0018, -77.0638], [-12.0015, -77.0640]], intensity: 0.7, type: 'recent' },
+        { coords: [[-12.0040, -77.0660], [-12.0040, -77.0655], [-12.0035, -77.0655], [-12.0035, -77.0660]], intensity: 0.75, type: 'recent' }
     ]
 };
 
@@ -280,8 +291,8 @@ function loadSARDataForViewport() {
     const latDiff = ne.lat - sw.lat;
     const lngDiff = ne.lng - sw.lng;
 
-    // Generar 3-6 polígonos distribuidos en el viewport
-    const numPolygons = Math.floor(Math.random() * 4) + 3; // 3-6 polígonos
+    // Generar más polígonos pero más pequeños (microzonas)
+    const numPolygons = Math.floor(Math.random() * 8) + 8; // 8-15 microzonas
     const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
 
     for (let i = 0; i < numPolygons; i++) {
@@ -292,16 +303,13 @@ function loadSARDataForViewport() {
         // Generar coordenadas aleatorias dentro del viewport
         const lat = sw.lat + Math.random() * latDiff;
         const lng = sw.lng + Math.random() * lngDiff;
-        const size = 0.005 + Math.random() * 0.01; // Tamaño variable
 
-        const coords = [
-            [lat, lng],
-            [lat, lng + size],
-            [lat + size, lng + size],
-            [lat + size, lng]
-        ];
+        // Tamaño mucho más pequeño para representar microzonas (20-100 metros aprox)
+        const size = 0.0002 + Math.random() * 0.0008; // ~20-100 metros
 
-        // Verificar si ya existe un polígono similar en esa ubicación
+        // Crear formas más irregulares para microzonas
+        const coords = createMicrozonePolygon(lat, lng, size);
+
         const data = { coords, intensity, type };
         const polygon = createSARPolygon(data, year);
 
@@ -313,7 +321,33 @@ function loadSARDataForViewport() {
         }
     }
 
-    console.log(`📊 ${numPolygons} nuevos polígonos SAR generados para el viewport`);
+    console.log(`📊 ${numPolygons} microzonas SAR generadas para el viewport`);
+}
+
+/**
+ * Crea un polígono irregular para representar una microzona
+ * @param {number} lat - Latitud central
+ * @param {number} lng - Longitud central
+ * @param {number} baseSize - Tamaño base
+ * @returns {Array} Array de coordenadas
+ */
+function createMicrozonePolygon(lat, lng, baseSize) {
+    // Generar entre 4-6 vértices para formas más irregulares
+    const numVertices = Math.floor(Math.random() * 3) + 4; // 4-6 vértices
+    const coords = [];
+    const angleStep = (Math.PI * 2) / numVertices;
+
+    for (let i = 0; i < numVertices; i++) {
+        const angle = angleStep * i + (Math.random() - 0.5) * 0.5;
+        const distance = baseSize * (0.7 + Math.random() * 0.6); // Variación en distancia
+
+        const latOffset = Math.cos(angle) * distance;
+        const lngOffset = Math.sin(angle) * distance;
+
+        coords.push([lat + latOffset, lng + lngOffset]);
+    }
+
+    return coords;
 }
 
 // ========================================
@@ -378,12 +412,12 @@ function loadAllSARData() {
  * @param {string} locationName - Nombre de la ubicación
  */
 function loadSARDataForLocation(lat, lng, locationName) {
-    // Generar datos SAR simulados alrededor de la ubicación
-    const offset = 0.01; // ~1km de radio aproximadamente
+    // Generar microzonas SAR alrededor de la ubicación
+    const offset = 0.005; // Radio de búsqueda reducido
 
-    // Generar 2-4 polígonos aleatorios de diferentes años
-    const yearsToGenerate = [2018, 2020, 2023, 2024];
-    const numPolygons = Math.floor(Math.random() * 3) + 2; // 2-4 polígonos
+    // Generar más microzonas pequeñas (5-10)
+    const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
+    const numPolygons = Math.floor(Math.random() * 6) + 5; // 5-10 microzonas
 
     let generatedData = [];
 
@@ -396,12 +430,13 @@ function loadSARDataForLocation(lat, lng, locationName) {
         const latOffset = (Math.random() - 0.5) * offset * 2;
         const lngOffset = (Math.random() - 0.5) * offset * 2;
 
-        const coords = [
-            [lat + latOffset, lng + lngOffset],
-            [lat + latOffset, lng + lngOffset + offset],
-            [lat + latOffset + offset, lng + lngOffset + offset],
-            [lat + latOffset + offset, lng + lngOffset]
-        ];
+        // Tamaño de microzona (20-100 metros)
+        const size = 0.0002 + Math.random() * 0.0008;
+
+        // Crear polígono irregular para microzona
+        const centerLat = lat + latOffset;
+        const centerLng = lng + lngOffset;
+        const coords = createMicrozonePolygon(centerLat, centerLng, size);
 
         const data = { coords, intensity, type };
         const polygon = createSARPolygon(data, year);
@@ -417,7 +452,7 @@ function loadSARDataForLocation(lat, lng, locationName) {
 
     // Mostrar notificación con información
     if (generatedData.length > 0) {
-        const message = `📍 ${locationName}: Se encontraron ${generatedData.length} eventos de inundación`;
+        const message = `📍 ${locationName}: Se encontraron ${generatedData.length} microzonas afectadas`;
         showTemporaryNotification(message);
         console.log('📊 Datos generados:', generatedData);
     } else {
