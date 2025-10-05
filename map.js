@@ -19,7 +19,7 @@ let layerGroups = {
     recent: null,
     prediction: null
 };
-let currentYear = new Date().getFullYear();
+let currentYear = MAP_CONFIG.timelineEnd; // Iniciar en 2025 para mostrar todos los datos
 let predictionMode = false;
 
 // Datos simulados SAR (en producción, estos vendrían de la API de NASA)
@@ -96,12 +96,15 @@ function initializeMap() {
     // Buscador de localidades
     addSearchControl();
 
-    // Cargar datos del año actual
-    loadSARData(currentYear);
+    // Cargar TODOS los datos históricos disponibles por defecto
+    loadAllSARData();
 
     // Inicializar controles adicionales
     initializeTimelineSlider();
     initializePredictionButton();
+
+    // Event listeners para cargar datos cuando el mapa se mueve
+    addMapMovementListeners();
 
     console.log('🗺️ Mapa inicializado correctamente');
 }
@@ -219,6 +222,98 @@ function addSearchControl() {
     });
 
     map.addControl(searchControl);
+
+    // Escuchar evento de búsqueda completada
+    map.on('geosearch/showlocation', function(result) {
+        const location = result.location;
+        console.log('📍 Búsqueda completada:', location.label);
+
+        // Generar y mostrar datos SAR para la ubicación buscada
+        loadSARDataForLocation(location.y, location.x, location.label);
+    });
+}
+
+/**
+ * Añade listeners para detectar movimiento del mapa y cargar datos dinámicamente
+ */
+function addMapMovementListeners() {
+    let moveTimeout;
+
+    // Evento cuando el usuario termina de mover el mapa
+    map.on('moveend', function() {
+        // Usar timeout para evitar múltiples llamadas
+        clearTimeout(moveTimeout);
+        moveTimeout = setTimeout(() => {
+            const center = map.getCenter();
+            const zoom = map.getZoom();
+
+            // Solo generar datos si el zoom es suficiente (nivel de detalle)
+            if (zoom >= 11) {
+                loadSARDataForViewport();
+            }
+        }, 500); // Esperar 500ms después de que termine el movimiento
+    });
+
+    // También escuchar el evento de zoom
+    map.on('zoomend', function() {
+        const zoom = map.getZoom();
+
+        if (zoom >= 11) {
+            clearTimeout(moveTimeout);
+            moveTimeout = setTimeout(() => {
+                loadSARDataForViewport();
+            }, 300);
+        }
+    });
+}
+
+/**
+ * Carga datos SAR para el área visible actual del mapa
+ */
+function loadSARDataForViewport() {
+    const bounds = map.getBounds();
+    const center = bounds.getCenter();
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+
+    // Calcular el área del viewport
+    const latDiff = ne.lat - sw.lat;
+    const lngDiff = ne.lng - sw.lng;
+
+    // Generar 3-6 polígonos distribuidos en el viewport
+    const numPolygons = Math.floor(Math.random() * 4) + 3; // 3-6 polígonos
+    const yearsToGenerate = [2015, 2018, 2020, 2023, 2024];
+
+    for (let i = 0; i < numPolygons; i++) {
+        const year = yearsToGenerate[Math.floor(Math.random() * yearsToGenerate.length)];
+        const type = year >= 2023 ? 'recent' : 'historical';
+        const intensity = 0.4 + Math.random() * 0.5; // 0.4 - 0.9
+
+        // Generar coordenadas aleatorias dentro del viewport
+        const lat = sw.lat + Math.random() * latDiff;
+        const lng = sw.lng + Math.random() * lngDiff;
+        const size = 0.005 + Math.random() * 0.01; // Tamaño variable
+
+        const coords = [
+            [lat, lng],
+            [lat, lng + size],
+            [lat + size, lng + size],
+            [lat + size, lng]
+        ];
+
+        // Verificar si ya existe un polígono similar en esa ubicación
+        const data = { coords, intensity, type };
+        const polygon = createSARPolygon(data, year);
+
+        // Agregar el polígono a la capa correspondiente
+        if (type === 'historical') {
+            layerGroups.historical.addLayer(polygon);
+        } else {
+            layerGroups.recent.addLayer(polygon);
+        }
+    }
+
+    console.log(`📊 ${numPolygons} nuevos polígonos SAR generados para el viewport`);
 }
 
 // ========================================
@@ -250,6 +345,84 @@ function loadSARData(year) {
     }
 
     console.log(`📊 Datos SAR cargados para el año ${year}`);
+}
+
+/**
+ * Carga TODOS los datos SAR disponibles (todos los años)
+ */
+function loadAllSARData() {
+    // Limpiar capas existentes
+    layerGroups.historical.clearLayers();
+    layerGroups.recent.clearLayers();
+
+    // Cargar todos los años disponibles en SAR_DATA
+    Object.keys(SAR_DATA).forEach(year => {
+        SAR_DATA[year].forEach(data => {
+            const polygon = createSARPolygon(data, parseInt(year));
+
+            if (data.type === 'historical') {
+                layerGroups.historical.addLayer(polygon);
+            } else {
+                layerGroups.recent.addLayer(polygon);
+            }
+        });
+    });
+
+    console.log('📊 Todos los datos SAR históricos cargados');
+}
+
+/**
+ * Carga datos SAR simulados para una ubicación específica
+ * @param {number} lat - Latitud
+ * @param {number} lng - Longitud
+ * @param {string} locationName - Nombre de la ubicación
+ */
+function loadSARDataForLocation(lat, lng, locationName) {
+    // Generar datos SAR simulados alrededor de la ubicación
+    const offset = 0.01; // ~1km de radio aproximadamente
+
+    // Generar 2-4 polígonos aleatorios de diferentes años
+    const yearsToGenerate = [2018, 2020, 2023, 2024];
+    const numPolygons = Math.floor(Math.random() * 3) + 2; // 2-4 polígonos
+
+    let generatedData = [];
+
+    for (let i = 0; i < numPolygons; i++) {
+        const year = yearsToGenerate[Math.floor(Math.random() * yearsToGenerate.length)];
+        const type = year >= 2023 ? 'recent' : 'historical';
+        const intensity = 0.5 + Math.random() * 0.4; // 0.5 - 0.9
+
+        // Generar coordenadas aleatorias cerca de la ubicación
+        const latOffset = (Math.random() - 0.5) * offset * 2;
+        const lngOffset = (Math.random() - 0.5) * offset * 2;
+
+        const coords = [
+            [lat + latOffset, lng + lngOffset],
+            [lat + latOffset, lng + lngOffset + offset],
+            [lat + latOffset + offset, lng + lngOffset + offset],
+            [lat + latOffset + offset, lng + lngOffset]
+        ];
+
+        const data = { coords, intensity, type };
+        const polygon = createSARPolygon(data, year);
+
+        if (type === 'historical') {
+            layerGroups.historical.addLayer(polygon);
+        } else {
+            layerGroups.recent.addLayer(polygon);
+        }
+
+        generatedData.push({ year, intensity: (intensity * 100).toFixed(0) });
+    }
+
+    // Mostrar notificación con información
+    if (generatedData.length > 0) {
+        const message = `📍 ${locationName}: Se encontraron ${generatedData.length} eventos de inundación`;
+        showTemporaryNotification(message);
+        console.log('📊 Datos generados:', generatedData);
+    } else {
+        showTemporaryNotification(`📍 ${locationName}: No se encontraron datos de inundación`);
+    }
 }
 
 /**
@@ -332,7 +505,7 @@ function initializeTimelineSlider() {
                 <div class="timeline-header">
                     <span class="timeline-icon">📅</span>
                     <span class="timeline-title">Línea temporal</span>
-                    <span class="timeline-year" id="timeline-year">${currentYear}</span>
+                    <span class="timeline-year" id="timeline-year">${MAP_CONFIG.timelineEnd}</span>
                 </div>
                 <div class="timeline-slider-container">
                     <input
@@ -341,7 +514,7 @@ function initializeTimelineSlider() {
                         class="timeline-slider"
                         min="${MAP_CONFIG.timelineStart}"
                         max="${MAP_CONFIG.timelineEnd}"
-                        value="${currentYear}"
+                        value="${MAP_CONFIG.timelineEnd}"
                         step="1"
                     >
                     <div class="timeline-labels">
@@ -670,6 +843,57 @@ INTEGRACIÓN CON DATOS SAR REALES DE NASA:
 // ========================================
 // INICIALIZACIÓN AUTOMÁTICA
 // ========================================
+
+// ========================================
+// FUNCIÓN PÚBLICA PARA BÚSQUEDA DESDE FORMULARIO
+// ========================================
+
+/**
+ * Centra el mapa en una ciudad y carga datos SAR
+ * Esta función es llamada desde script.js cuando se usa el formulario
+ * @param {string} cityName - Nombre de la ciudad a buscar
+ */
+window.centerMapOnCity = async function(cityName) {
+    if (!map) {
+        console.error('El mapa aún no está inicializado');
+        return;
+    }
+
+    try {
+        // Usar el provider de GeoSearch para buscar la ubicación
+        const provider = new GeoSearch.OpenStreetMapProvider();
+        const results = await provider.search({ query: cityName });
+
+        if (results && results.length > 0) {
+            const result = results[0];
+            const lat = result.y;
+            const lng = result.x;
+
+            // Centrar el mapa en la ubicación
+            map.setView([lat, lng], 13);
+
+            // Agregar marcador temporal
+            const marker = L.marker([lat, lng]).addTo(map);
+            marker.bindPopup(`<strong>${result.label}</strong>`).openPopup();
+
+            // Generar y cargar datos SAR para esta ubicación
+            loadSARDataForLocation(lat, lng, result.label);
+
+            // Remover el marcador después de 5 segundos
+            setTimeout(() => {
+                map.removeLayer(marker);
+            }, 5000);
+
+            console.log('✅ Ciudad encontrada:', result.label);
+        } else {
+            console.warn('❌ No se encontraron resultados para:', cityName);
+            showTemporaryNotification(`No se encontró: ${cityName}`);
+        }
+    } catch (error) {
+        console.error('Error al buscar ciudad:', error);
+        showTemporaryNotification('Error al realizar la búsqueda');
+    }
+};
 
 // Esperar a que el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
