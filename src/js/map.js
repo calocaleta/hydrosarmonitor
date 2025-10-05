@@ -133,8 +133,8 @@ function initializeMap() {
     // Control de capas
     // addLayerControl(); // Removido - ahora todo se controla desde el slider temporal
 
-    // Buscador de localidades (oculto - se puede buscar desde el formulario principal)
-    // addSearchControl();
+    // Buscador de localidades
+    addSearchControl();
 
     // Inicializar el zoom actual
     currentZoomLevel = map.getZoom();
