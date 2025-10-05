@@ -29,6 +29,8 @@ let currentZoomLevel = 11;
 let cumulativeMode = true; // Modo acumulado activado por defecto
 let minHumidityThreshold = 0.5; // Umbral mínimo de humedad (50% por defecto)
 let currentOpenPopup = null; // Trackear popup abierto actualmente
+let showFloodData = true; // Mostrar inundaciones (activo por defecto)
+let showMoistureData = false; // Mostrar humedad (inactivo por defecto)
 
 // Configuración de niveles de detalle (LOD)
 const LOD_CONFIG = {
@@ -683,6 +685,18 @@ function createSARPolygon(data, year) {
         return null;
     }
 
+    // Filtrar según tipo de dato activo
+    const isFlood = !data.dataType || data.dataType === 'flood';
+    const isMoisture = data.dataType === 'moisture';
+
+    if (isFlood && !showFloodData) {
+        return null; // No crear polígonos de inundación si el filtro está desactivado
+    }
+
+    if (isMoisture && !showMoistureData) {
+        return null; // No crear polígonos de humedad si el filtro está desactivado
+    }
+
     // Determinar color según tipo de dato
     const isRecent = year >= 2023;
     let color;
@@ -701,12 +715,7 @@ function createSARPolygon(data, year) {
     // humedad mínima → 0% opacidad (casi transparente)
     // 100% humedad (1.0) → 100% opacidad (completamente visible)
     const opacityRange = 1.0 - minHumidityThreshold;
-    let fillOpacity = opacityRange > 0 ? (data.intensity - minHumidityThreshold) / opacityRange : 1.0;
-
-    // Si es humedad de suelo, ocultarla por defecto (fillOpacity = 0)
-    if (data.dataType === 'moisture') {
-        fillOpacity = 0;
-    }
+    const fillOpacity = opacityRange > 0 ? (data.intensity - minHumidityThreshold) / opacityRange : 1.0;
 
     const polygon = L.polygon(data.coords, {
         color: color,
@@ -741,9 +750,9 @@ function createSARPolygon(data, year) {
     });
 
     // Determinar icono y color según tipo de dato
-    const isMoisture = data.dataType === 'moisture';
-    const icon = isMoisture ? '💧' : '🌊';
-    const yearBgColor = isMoisture ? '#6b7280' : (isRecent ? '#2563eb' : '#60a5fa');
+    const isMoistureType = data.dataType === 'moisture';
+    const icon = isMoistureType ? '💧' : '🌊';
+    const yearBgColor = isMoistureType ? '#6b7280' : (isRecent ? '#2563eb' : '#60a5fa');
 
     // Popup con diseño minimalista
     const popupContent = `
@@ -957,55 +966,26 @@ function toggleCumulativeMode() {
  * Alterna la visibilidad de tipos de datos (inundación/humedad)
  */
 function toggleDataTypeVisibility() {
-    const showFlood = document.getElementById('show-flood').checked;
-    const showMoisture = document.getElementById('show-moisture').checked;
+    // Actualizar variables globales
+    showFloodData = document.getElementById('show-flood').checked;
+    showMoistureData = document.getElementById('show-moisture').checked;
 
+    // Limpiar todas las capas del nivel LOD actual
     const currentLOD = getLODLevel(map.getZoom());
-    let floodCount = 0;
-    let moistureCount = 0;
-    let hiddenCount = 0;
+    layerGroups[currentLOD].clearLayers();
 
-    layerGroups[currentLOD].eachLayer(layer => {
-        if (layer.options && layer.options.dataType) {
-            const isFlood = layer.options.dataType === 'flood';
-            const isMoisture = layer.options.dataType === 'moisture';
-            const meetsThreshold = layer.options.baseIntensity >= minHumidityThreshold;
+    // Limpiar cache de posiciones para forzar regeneración
+    positionCache = {};
 
-            // Determinar si debe ser visible
-            const shouldShow = meetsThreshold && (
-                (isFlood && showFlood) ||
-                (isMoisture && showMoisture)
-            );
-
-            if (shouldShow) {
-                // Calcular opacidad normal
-                const opacityRange = 1.0 - minHumidityThreshold;
-                const fillOpacity = opacityRange > 0 ? (layer.options.baseIntensity - minHumidityThreshold) / opacityRange : 1.0;
-
-                layer.setStyle({
-                    fillOpacity: fillOpacity,
-                    opacity: 0
-                });
-
-                if (isFlood) floodCount++;
-                if (isMoisture) moistureCount++;
-            } else {
-                // Ocultar completamente
-                layer.setStyle({
-                    fillOpacity: 0,
-                    opacity: 0
-                });
-                hiddenCount++;
-            }
-        }
-    });
+    // Recargar datos con los nuevos filtros
+    loadDataForCurrentZoom();
 
     // Feedback visual
     const messages = [];
-    if (showFlood) messages.push(`${floodCount} inundaciones`);
-    if (showMoisture) messages.push(`${moistureCount} humedad`);
+    if (showFloodData) messages.push('🌊 Inundaciones');
+    if (showMoistureData) messages.push('💧 Humedad');
 
-    const message = messages.length > 0 ? messages.join(' + ') : 'Sin datos visibles';
+    const message = messages.length > 0 ? `Mostrando: ${messages.join(' + ')}` : 'Sin filtros activos';
     showTemporaryNotification(message);
 }
 
