@@ -656,14 +656,21 @@ function loadSARDataForLocation(lat, lng, locationName) {
  * @returns {L.Polygon} Polígono de Leaflet
  */
 function createSARPolygon(data, year) {
-    // Todos los polígonos son azul, con opacidad basada en intensidad
-    const blueColor = '#2563eb'; // Azul vibrante
-    const baseOpacity = data.intensity * 0.7;
+    // Determinar color según antigüedad del dato
+    // Datos recientes (2023-2025) = azul oscuro
+    // Datos antiguos (2015-2022) = celeste
+    const isRecent = year >= 2023;
+    const color = isRecent ? '#2563eb' : '#60a5fa'; // Azul oscuro vs celeste
+
+    // Transparencia proporcional a humedad/intensidad
+    // 100% humedad (intensity = 1.0) → 0% transparencia (fillOpacity = 1.0)
+    // 0% humedad (intensity = 0.0) → 100% transparencia (fillOpacity = 0.0)
+    const fillOpacity = data.intensity;
 
     const polygon = L.polygon(data.coords, {
-        color: blueColor,
-        fillColor: blueColor,
-        fillOpacity: baseOpacity,
+        color: color,
+        fillColor: color,
+        fillOpacity: fillOpacity,
         weight: 1, // Borde muy delgado (1 pixel)
         opacity: 0.4, // Borde semi-transparente
         className: 'sar-polygon' // Para animaciones CSS
@@ -840,37 +847,29 @@ function handleTimelineChange(e) {
 
 /**
  * Actualiza la opacidad de todas las capas basado en el año seleccionado
- * Los datos más antiguos se ven más transparentes
  * @param {number} endYear - Año final del rango
  */
 function updateLayerOpacityByYear(endYear) {
-    const startYear = MAP_CONFIG.timelineStart;
-    const yearRange = endYear - startYear;
-    const blueColor = '#2563eb'; // Mismo azul para todos
-
     // Función helper para actualizar capas
     const updateLayer = (layer) => {
         const layerYear = layer.options.year;
 
+        // Determinar color según antigüedad (azul = reciente, celeste = antiguo)
+        const isRecent = layerYear >= 2023;
+        const color = isRecent ? '#2563eb' : '#60a5fa';
+
+        // Transparencia basada en intensidad/humedad
+        // 100% humedad = 0% transparencia (fillOpacity = 1.0 * baseIntensity)
+        const fillOpacity = layer.options.baseIntensity;
+
         if (cumulativeMode) {
             // MODO ACUMULADO: Mostrar desde 2015 hasta el año seleccionado
             if (layerYear <= endYear) {
-                // Calcular opacidad progresiva (más antiguo = más transparente)
-                const yearDiff = endYear - layerYear;
-                const ageFactor = yearRange > 0 ? 1 - (yearDiff / yearRange) : 1;
-
-                // Opacidad: 0.15 (muy antiguo) a 0.7 (reciente)
-                const baseOpacity = 0.15 + (ageFactor * 0.55);
-                const fillOpacity = layer.options.baseIntensity * baseOpacity;
-
-                // Opacidad del borde: más sutil para datos antiguos
-                const borderOpacity = 0.2 + (ageFactor * 0.4);
-
                 layer.setStyle({
-                    color: blueColor,
-                    fillColor: blueColor,
+                    color: color,
+                    fillColor: color,
                     fillOpacity: fillOpacity,
-                    opacity: borderOpacity,
+                    opacity: 0.4,
                     weight: 1
                 });
 
@@ -890,14 +889,11 @@ function updateLayerOpacityByYear(endYear) {
         } else {
             // MODO AÑO ESPECÍFICO: Mostrar solo el año seleccionado
             if (layerYear === endYear) {
-                // Opacidad uniforme para todas las áreas del año
-                const fillOpacity = layer.options.baseIntensity * 0.6;
-
                 layer.setStyle({
-                    color: blueColor,
-                    fillColor: blueColor,
+                    color: color,
+                    fillColor: color,
                     fillOpacity: fillOpacity,
-                    opacity: 0.5,
+                    opacity: 0.4,
                     weight: 1
                 });
 
