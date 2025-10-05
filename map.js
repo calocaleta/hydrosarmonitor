@@ -31,6 +31,7 @@ let minHumidityThreshold = 0.8; // Umbral mínimo de humedad (80% por defecto)
 let currentOpenPopup = null; // Trackear popup abierto actualmente
 let showFloodData = true; // Mostrar inundaciones (activo por defecto)
 let showMoistureData = false; // Mostrar humedad (inactivo por defecto)
+let activeHighlightPolygon = null; // Polígono de borde rojo activo
 
 // Configuración de niveles de detalle (LOD)
 const LOD_CONFIG = {
@@ -1754,6 +1755,12 @@ function initializeHistoricalEventsTour() {
  * Crea el dropdown de eventos históricos
  */
 function createHistoricalEventsDropdown() {
+    // Evitar crear duplicados
+    const existingDropdown = document.getElementById('historical-events-dropdown');
+    if (existingDropdown) {
+        existingDropdown.remove();
+    }
+
     // Crear contenedor del dropdown
     const dropdown = document.createElement('div');
     dropdown.id = 'historical-events-dropdown';
@@ -1842,16 +1849,26 @@ function toggleHistoricalEventsDropdown(event) {
     }
 
     const dropdown = document.getElementById('historical-events-dropdown');
-    if (!dropdown) return;
+    if (!dropdown) {
+        console.warn('Dropdown no encontrado, recreando...');
+        createHistoricalEventsDropdown();
+        return;
+    }
 
     dropdownVisible = !dropdownVisible;
 
     if (dropdownVisible) {
+        // Forzar reflow para asegurar animación suave
         dropdown.style.display = 'block';
-        setTimeout(() => dropdown.classList.add('visible'), 10);
+        dropdown.offsetHeight; // Trigger reflow
+        requestAnimationFrame(() => {
+            dropdown.classList.add('visible');
+        });
     } else {
         dropdown.classList.remove('visible');
-        setTimeout(() => dropdown.style.display = 'none', 300);
+        setTimeout(() => {
+            dropdown.style.display = 'none';
+        }, 300);
     }
 }
 
@@ -1927,6 +1944,44 @@ function navigateToEvent(eventIndex) {
     });
     centerLat /= event.coords.length;
     centerLng /= event.coords.length;
+
+    // ==========================================
+    // PASO 2.1: CREAR BORDE ROJO PERSISTENTE
+    // ==========================================
+
+    // Remover borde rojo anterior con animación de desvanecimiento
+    if (activeHighlightPolygon) {
+        const oldPolygon = activeHighlightPolygon;
+        let currentOpacity = 1.0;
+        const fadeInterval = setInterval(() => {
+            currentOpacity -= 0.1;
+            if (currentOpacity <= 0) {
+                clearInterval(fadeInterval);
+                if (map.hasLayer(oldPolygon)) {
+                    map.removeLayer(oldPolygon);
+                }
+            } else {
+                oldPolygon.setStyle({ opacity: currentOpacity });
+            }
+        }, 30); // Desvanecimiento rápido del anterior
+    }
+
+    // Crear nuevo polígono con borde rojo que resalta el área del evento
+    activeHighlightPolygon = L.polygon(event.coords, {
+        color: '#ff0000',
+        weight: 5,
+        opacity: 0,
+        fillOpacity: 0,
+        className: 'animated-highlight-border'
+    }).addTo(map);
+
+    // Animar aparición del borde rojo con efecto de pulso
+    setTimeout(() => {
+        activeHighlightPolygon.setStyle({ opacity: 1 });
+    }, 100);
+
+    // El borde rojo permanece hasta que se seleccione otro evento
+    // (se elimina solo cuando activeHighlightPolygon es reemplazado arriba)
 
     // Cerrar dropdown
     toggleHistoricalEventsDropdown();

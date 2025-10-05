@@ -320,9 +320,9 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    transition: all 0.2s ease;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
 .status-item:hover {
@@ -331,15 +331,30 @@ body {
 
 .status-item.clickable {
     cursor: pointer;
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent-light);
+    user-select: none;
 }
 
 .status-item.clickable:hover {
     background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.status-item.clickable:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .status-item.clickable:hover .status-label,
 .status-item.clickable:hover .status-label strong {
     color: white;
+}
+
+.status-item.clickable:hover .status-icon {
+    transform: scale(1.1);
 }
 
 .status-icon {
@@ -2876,6 +2891,21 @@ body {
 @keyframes bounce-drop {
     0%, 60%, 100% { transform: translateY(0); }
     30% { transform: translateY(-30px); }
+}
+
+/* Animación de borde rojo pulsante para resaltar región */
+@keyframes pulse-highlight {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.animated-highlight-border {
+    animation: pulse-highlight 0.8s ease-in-out 3;
+    transition: opacity 0.3s ease;
 }
 
 .loading-status {
