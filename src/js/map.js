@@ -1675,24 +1675,34 @@ function updateDataStatusBadge(historicalCount, nasaCount, nasaError = false) {
         historicalCountEl.textContent = historicalCount;
     }
     if (historicalIcon) {
-        historicalIcon.textContent = historicalCount > 0 ? '🟢' : '🔴';
+        // Remover todas las clases de estado
+        historicalIcon.className = 'status-icon';
+        // Agregar clase apropiada
+        historicalIcon.classList.add(historicalCount > 0 ? 'status-active' : 'status-inactive');
     }
 
     // Actualizar datos de NASA
     if (nasaCount === null) {
         // Aún cargando
-        if (nasaIcon) nasaIcon.textContent = '🟡';
+        if (nasaIcon) {
+            nasaIcon.className = 'status-icon status-loading';
+        }
         if (nasaCountEl) nasaCountEl.textContent = 'Cargando...';
     } else if (nasaError) {
         // Error - pero la app funciona con datos históricos
-        if (nasaIcon) nasaIcon.textContent = '🔴';
+        if (nasaIcon) {
+            nasaIcon.className = 'status-icon status-inactive';
+        }
         if (nasaCountEl) {
             nasaCountEl.textContent = 'No disponible';
             nasaCountEl.title = 'API de NASA no disponible. Usando solo datos históricos verificados.';
         }
     } else {
         // Cargado exitosamente
-        if (nasaIcon) nasaIcon.textContent = nasaCount > 0 ? '🟢' : '🟡';
+        if (nasaIcon) {
+            nasaIcon.className = 'status-icon';
+            nasaIcon.classList.add(nasaCount > 0 ? 'status-nasa-active' : 'status-loading');
+        }
         if (nasaCountEl) {
             nasaCountEl.textContent = nasaCount;
             nasaCountEl.title = `${nasaCount} eventos de Sentinel-1 SAR`;
