@@ -288,8 +288,7 @@ async function loadNASAEarthdataFloodData() {
 // 3. Reemplaza AUTH_TOKEN en línea 17
 // 4. Descomenta el bloque window.NASA_EARTHDATA_API abajo
 
-// Exportar funciones (COMENTADO TEMPORALMENTE)
-/*
+// Exportar funciones
 window.NASA_EARTHDATA_API = {
     searchSentinel1Data,
     processSentinel1Granules,
@@ -297,9 +296,9 @@ window.NASA_EARTHDATA_API = {
     loadNASAEarthdataFloodData
 };
 console.log('📡 Módulo NASA Earthdata API cargado');
-*/
 
 // Log para desarrollo
-console.log('⚠️ NASA Earthdata API desactivada temporalmente');
-console.log('   → La aplicación funciona con datos históricos verificados (9 eventos)');
+console.log('📡 NASA Earthdata API cargada');
+console.log('⚠️ Nota: Si la API falla (CORS/Token expirado), la app usa datos históricos verificados');
+console.log('   → Para renovar token: https://urs.earthdata.nasa.gov/users/calocaleta/user_tokens');
 console.log('   → Para reactivar: Genera nuevo token en https://urs.earthdata.nasa.gov/');

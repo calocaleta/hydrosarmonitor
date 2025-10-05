@@ -1640,6 +1640,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const historicalCount = window.REAL_FLOOD_DATA ?
             Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
         updateDataStatusBadge(historicalCount, 0, true);
+
+        // Mostrar mensaje informativo al usuario
+        console.log('ℹ️ La aplicación funciona correctamente con datos históricos verificados');
+        console.log('   Posibles causas del error de NASA API:');
+        console.log('   - Token de autenticación expirado');
+        console.log('   - Restricciones de CORS del navegador');
+        console.log('   - API temporalmente no disponible');
     });
 
     // PASO 4: Ocultar loading screen (mapa ya está listo)

@@ -78,6 +78,12 @@
     <h1>🛰️ HydroSAR Monitor - Diagnóstico de Conexión SAR</h1>
 
     <div class="section">
+        <h3 class="info">📂 Rutas de archivos cargados:</h3>
+        <p class="info">• ../src/data/real-flood-data.js</p>
+        <p class="info">• ../src/js/nasa-earthdata-api.js</p>
+    </div>
+
+    <div class="section">
         <h2>1. Verificación de Archivos</h2>
         <div id="file-check"></div>
     </div>
@@ -103,8 +109,8 @@
         <div id="stats"></div>
     </div>
 
-    <script src="real-flood-data.js"></script>
-    <script src="nasa-earthdata-api.js"></script>
+    <script src="../src/data/real-flood-data.js"></script>
+    <script src="../src/js/nasa-earthdata-api.js"></script>
 
     <script>
         // 1. Verificar archivos cargados
@@ -115,15 +121,19 @@
             // Verificar real-flood-data.js
             if (typeof window.REAL_FLOOD_DATA !== 'undefined') {
                 html += '<p class="success">✅ real-flood-data.js cargado correctamente</p>';
+                html += `<p class="info">   Tipo: ${typeof window.REAL_FLOOD_DATA}</p>`;
             } else {
                 html += '<p class="error">❌ real-flood-data.js NO cargado</p>';
+                html += '<p class="warning">   Verifica que la ruta ../src/data/real-flood-data.js sea correcta</p>';
             }
 
             // Verificar nasa-earthdata-api.js
             if (typeof window.NASA_EARTHDATA_API !== 'undefined') {
                 html += '<p class="success">✅ nasa-earthdata-api.js cargado correctamente</p>';
+                html += `<p class="info">   Funciones disponibles: ${Object.keys(window.NASA_EARTHDATA_API).join(', ')}</p>`;
             } else {
                 html += '<p class="error">❌ nasa-earthdata-api.js NO cargado</p>';
+                html += '<p class="warning">   Verifica que la ruta ../src/js/nasa-earthdata-api.js sea correcta</p>';
             }
 
             fileCheck.innerHTML = html;
