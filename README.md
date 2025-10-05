@@ -1,382 +1,240 @@
-# 🌧️ HydroSAR Monitor - Explorador de Lluvias
+# 🌊 HydroSAR Monitor
 
-Sistema de visualización de datos SAR de NASA para monitoreo de lluvias e inundaciones urbanas con predicción por IA.
+Aplicación web progresiva (PWA) para monitoreo de lluvias e inundaciones urbanas usando datos SAR de NASA.
 
-![Version](https://img.shields.io/badge/version-4.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-
-## 🚀 Características
-
-### ✅ Implementadas
-
-- **Mapa Interactivo con Leaflet.js**
-  - Vista centrada en Lima, Perú (configurable)
-  - Controles de zoom y pantalla completa
-  - Búsqueda de localidades por nombre
-
-- **Capas SAR (Radar de Apertura Sintética)**
-  - Capa histórica (2015-2022): datos de lluvias pasadas
-  - Capa reciente (2023-2025): datos actuales
-  - Activación/desactivación independiente de capas
-  - Visualización con intensidad variable
-
-- **Slider Temporal**
-  - Navegación por años (2015-2025)
-  - Actualización dinámica de capas según año seleccionado
-  - Indicador visual del año activo
-
-- **Modo Predicción IA**
-  - Activación con un clic
-  - Visualización de zonas de riesgo (próximos 7 días)
-  - Clasificación por nivel de riesgo: Alto, Medio, Bajo
-  - Probabilidades calculadas por IA
-
-- **🚨 Sistema de Alertas en Tiempo Real** (NUEVO)
-  - Detección automática de zonas de riesgo activas
-  - Polígonos animados con bordes pulsantes
-  - 3 zonas de ejemplo: Huaycoloro, Ventanilla, Canto Grande
-  - Clasificación por nivel: Alto, Medio, Bajo
-  - Popups informativos con detalles de riesgo
-
-- **🔔 Notificaciones Visuales y Sonoras** (NUEVO)
-  - Geolocalización del usuario (GPS)
-  - Alerta automática si está en zona de riesgo
-  - Notificación flotante con información crítica
-  - Sonido de alerta (beep) con control de volumen
-  - Botón para silenciar/activar sonido
-  - Notificaciones del navegador (con permiso)
-  - Botón "Ver en mapa" para ubicar la zona
-
-- **📢 Reporte Ciudadano de Emergencias** (NUEVO)
-  - Botón flotante naranja "Reportar zona afectada"
-  - Formulario con validación:
-    - Nombre del usuario (opcional)
-    - Tipo de incidente (huayco, inundación, lluvia intensa, etc.)
-    - Descripción detallada
-    - Coordenadas GPS automáticas
-  - Marcadores en el mapa con reportes ciudadanos
-  - Almacenamiento local de reportes
-  - Mensaje de confirmación de envío
-  - Función de compartir alertas
-
-- **💬 Chatbot Educativo con IA** (NUEVO)
-  - Asistente virtual activado por botón flotante
-  - Base de conocimiento con 14 categorías temáticas
-  - Respuestas sobre SAR, huaycos, emergencias, mapas
-  - Sistema de palabras clave inteligente
-  - Interfaz tipo mensajería (WhatsApp/Messenger)
-  - Indicador de escritura animado
-  - Historial de conversación persistente
-  - Integrado con tema claro/oscuro
-  - Notificaciones de alertas vía chat
-
-- **🎮 Minijuego "Caza Gotas"** (NUEVO)
-  - Modo interactivo para educación ambiental
-  - Gotas animadas en zonas de lluvia del mapa
-  - Sistema de recolección por click
-  - Contador de gotas en tiempo real
-  - Objetivo: 5 gotas para desbloquear logro
-  - Efectos visuales: ripple, bounce, confetti
-  - Modal de logro con estadísticas
-  - Integración con chatbot para feedback
-  - Gamificación para engagement juvenil
-
-- **Sistema de Temas**
-  - Modo claro/oscuro
-  - 3 esquemas de color: Azul, Verde, Morado
-  - Persistencia en localStorage
-  - Detección automática de preferencias del sistema
-
-- **Diseño Responsivo y Accesible**
-  - Optimizado para móviles, tablets y desktop
-  - Controles adaptativos según tamaño de pantalla
-  - Botones grandes para adultos mayores
-  - Colores de alto contraste
-  - Soporte para lectores de pantalla
-  - Rendimiento optimizado para dispositivos móviles
-
-## 📋 Requisitos
-
-### Mínimos
-- Navegador moderno con soporte para ES6+
-- Conexión a internet (para cargar Leaflet.js y tiles de OpenStreetMap)
-
-### Recomendados
-- Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- Resolución mínima: 320x568 (iPhone SE)
-
-## 🛠️ Instalación y Uso
-
-### Opción 1: Abrir directamente
-```bash
-# Clonar o descargar el repositorio
-git clone <repository-url>
-cd hydrosarmonitor
-
-# Abrir index.html en un navegador
-# No requiere servidor web para pruebas básicas
-```
-
-### Opción 2: Servidor local (recomendado)
-```bash
-# Usando Python 3
-python -m http.server 8000
-
-# Usando Node.js con npx
-npx serve .
-
-# Usando VS Code
-# Instalar extensión "Live Server" y hacer clic derecho > "Open with Live Server"
-```
-
-Luego abrir en el navegador: `http://localhost:8000`
-
-## 📁 Estructura de Archivos
+## 📁 Estructura del Proyecto
 
 ```
 hydrosarmonitor/
+├── 📄 index.html              # Archivo HTML principal
+├── 📄 manifest.json           # Manifiesto PWA
+├── 📄 sw.js                   # Service Worker (debe estar en raíz)
+├── 📄 .gitignore             # Archivos ignorados por Git
 │
-├── index.html              # Estructura HTML principal
-├── styles.css              # Estilos globales + tema + mapa + alertas
-├── script.js               # Lógica de UI (tema, formulario, notificaciones)
-├── map.js                  # Lógica del mapa Leaflet y capas SAR
-├── alerts.js               # Sistema de alertas y reportes ciudadanos
+├── 📁 src/                    # Código fuente
+│   ├── 📁 js/                # JavaScript modules
+│   │   ├── script.js         # Sistema de temas y notificaciones
+│   │   ├── map.js            # Mapa Leaflet y visualización SAR
+│   │   ├── alerts.js         # Sistema de alertas y zonas de riesgo
+│   │   ├── chatbot.js        # Chatbot educativo
+│   │   ├── game.js           # Sistema de gamificación
+│   │   └── nasa-earthdata-api.js  # Integración NASA Earthdata
+│   │
+│   ├── 📁 css/               # Estilos
+│   │   └── styles.css        # Estilos globales y temas
+│   │
+│   └── 📁 data/              # Datos históricos
+│       └── real-flood-data.js # Eventos de inundación verificados (60+ eventos)
 │
-├── CLAUDE.md               # Guía para Claude Code
-├── PWA_CONVERSION_GUIDE.md # Guía de conversión a PWA/APK
-└── README.md               # Este archivo
+├── 📁 assets/                 # Recursos estáticos
+│   ├── 📁 icons/             # Iconos PWA (72x72 a 512x512)
+│   └── 📁 screenshots/       # Screenshots para PWA
+│
+├── 📁 docs/                   # Documentación
+│   ├── README.md             # Documentación técnica completa
+│   ├── CLAUDE.md             # Guía para Claude Code
+│   ├── DATOS_REALES.md       # Información sobre datos históricos
+│   ├── NASA_EARTHDATA_INTEGRATION.md  # Guía de integración NASA
+│   └── PWA_CONVERSION_GUIDE.md        # Guía de conversión a APK
+│
+└── 📁 tests/                  # Tests y herramientas de desarrollo
+    └── test-sar-connection.html  # Test de conexión NASA API
+
 ```
 
-## 🗺️ Uso del Mapa
+## 🚀 Inicio Rápido
 
-### Búsqueda de Localidades
-1. Escribir el nombre de la ciudad en el formulario superior
-2. Hacer clic en "Consultar historial"
-3. El mapa se centrará automáticamente en la ubicación
+### Opción 1: Servidor Local (Recomendado)
 
-### Navegación Temporal
-1. Usar el slider en la esquina inferior izquierda
-2. Mover entre 2015 y 2025 para ver datos históricos
-3. Las capas se actualizan automáticamente
+```bash
+# Usando npx serve
+npx serve . -l 8000
 
-### Control de Capas
-1. Usar el panel en la esquina superior derecha
-2. Activar/desactivar "Históricas" o "Recientes"
-3. Los checkboxes permiten combinar visualizaciones
+# O usando Python
+python -m http.server 8000
 
-### Modo Predicción IA
-1. Hacer clic en "Activar Predicción IA" (esquina superior izquierda)
-2. Se mostrarán polígonos amarillos con zonas de riesgo
-3. Hacer clic en las zonas para ver detalles de probabilidad
-4. Desactivar para volver a la vista normal
+# O usando VS Code Live Server
+# Click derecho en index.html > "Open with Live Server"
+```
 
-## 🚨 Sistema de Alertas
+Luego abre [http://localhost:8000](http://localhost:8000)
 
-### Zonas de Riesgo Automáticas
-Al cargar la aplicación, verás automáticamente:
-- **Polígonos rojos/naranjas** pulsantes en el mapa
-- Zonas activas: Quebrada Huaycoloro, Ventanilla, Canto Grande
-- Hacer clic o hover sobre las zonas para ver detalles
-- Botón "Compartir alerta" en cada zona
+### Opción 2: Abrir Directamente
 
-### Notificaciones de Alerta
-Si estás dentro de una zona de riesgo:
-1. **Permiso de ubicación**: El navegador pedirá acceso a tu GPS
-2. **Alerta visual**: Aparecerá una notificación flotante roja
-3. **Sonido de alerta**: Beep automático (configurable)
-4. **Controles disponibles**:
-   - 🔇 Silenciar/Activar sonido
-   - 📍 Ver en mapa (te lleva a la zona)
-   - × Cerrar alerta
+Abre `index.html` directamente en tu navegador (algunas funciones PWA no estarán disponibles).
 
-### Reportar Zona Afectada
-1. **Botón flotante naranja** en la esquina inferior derecha
-2. Click para abrir el formulario
-3. **Completar datos**:
-   - Nombre (opcional)
-   - Tipo de incidente (obligatorio)
-   - Descripción detallada (obligatorio)
-   - Ubicación GPS (automática, se puede actualizar)
-4. Click en "Enviar reporte"
-5. **Confirmación**: Mensaje de éxito + marcador en el mapa
-6. Los reportes se muestran como 📍 en el mapa
+## 📦 Dependencias
 
-### Permisos Necesarios
-- **Geolocalización**: Para detectar si estás en zona de riesgo
-- **Notificaciones**: Para alertas del navegador (opcional)
-- **Audio**: Para reproducir sonido de alerta
+**Todas las dependencias se cargan desde CDN:**
+- Leaflet.js 1.9.4 (mapas interactivos)
+- Leaflet-Geosearch 3.11.0 (búsqueda geográfica)
+- Google Fonts - Poppins
 
-## 🎨 Personalización Visual
+**No requiere:**
+- Node.js
+- npm install
+- Build process
+- Bundlers
 
-### Cambiar Tema
-- Hacer clic en el botón sol/luna (esquina superior derecha)
-- El tema se guarda automáticamente en localStorage
+## 🗺️ Datos Históricos
 
-### Cambiar Esquema de Color
-- Usar los botones circulares de colores
-- Opciones: Azul (default), Verde, Morado
-- Afecta todos los elementos de la interfaz
+El proyecto incluye **más de 60 eventos históricos verificados** de inundaciones en Perú (2015-2025):
 
-## 🔌 Integración con Datos Reales
+### Regiones Cubiertas:
+- **Amazonas/Bagua**: 21 eventos (Ríos Marañón, Utcubamba, Chiriaco)
+- **Lima**: 8 eventos (Río Rímac, Chosica, Ate)
+- **Piura**: 4 eventos (El Niño Costero 2017, Ciclón Yaku 2023)
+- **Cusco**: 3 eventos (Valle Sagrado, Machu Picchu)
+- **Costa, Sierra y Selva**: 30+ eventos adicionales
 
-### Datos SAR Simulados vs. Reales
+### Eventos Críticos:
+- 🔴 **2017**: El Niño Costero (11 eventos, intensidad hasta 98%)
+- 🔴 **2023**: Ciclón Yaku (4 eventos)
+- 🟡 **2024**: Crecida histórica Río Amazonas (93%)
 
-Actualmente el sistema usa datos simulados para demostración. Para integrar datos reales de NASA:
+Ver [`src/data/real-flood-data.js`](src/data/real-flood-data.js) para detalles completos.
 
-#### 1. API de NASA Earthdata
+## 🛠️ Tecnologías
+
+- **Frontend**: Vanilla HTML/CSS/JavaScript (ES6+)
+- **Mapas**: Leaflet.js
+- **PWA**: Service Workers, Web App Manifest
+- **APIs**: NASA Earthdata (Sentinel-1 SAR)
+- **Estilo**: CSS Variables, CSS Grid, Flexbox
+- **Responsive**: Mobile-first design
+
+## 📖 Documentación
+
+- **[docs/README.md](docs/README.md)** - Documentación técnica completa
+- **[docs/CLAUDE.md](docs/CLAUDE.md)** - Guía de contexto para Claude Code
+- **[docs/DATOS_REALES.md](docs/DATOS_REALES.md)** - Información sobre datos históricos
+- **[docs/NASA_EARTHDATA_INTEGRATION.md](docs/NASA_EARTHDATA_INTEGRATION.md)** - Guía integración NASA API
+- **[docs/PWA_CONVERSION_GUIDE.md](docs/PWA_CONVERSION_GUIDE.md)** - Conversión a APK Android
+
+## 🎯 Características
+
+### ✅ Implementadas
+- 🗺️ Mapa interactivo con visualización SAR
+- 📊 60+ eventos históricos verificados (Perú 2015-2025)
+- ⚠️ Sistema de alertas geográficas
+- 🤖 Chatbot educativo sobre huaycos e inundaciones
+- 🎮 Sistema de gamificación (recolección de gotas)
+- 📱 PWA instalable (offline-first)
+- 🌓 Tema claro/oscuro
+- 🔍 Búsqueda geográfica
+- 📍 Geolocalización
+- 🎨 3 esquemas de color (azul, verde, morado)
+
+### 🔄 Funciones Dinámicas
+- **Timeline**: Navegación temporal 2015-2025
+- **Filtrado geográfico**: Eventos cercanos (50km radio)
+- **LOD (Level of Detail)**: Carga optimizada por zoom
+- **Modo predictivo**: Zonas de riesgo futuras (IA)
+
+## 🧪 Testing
+
+```bash
+# Abrir test de conexión NASA API
+open tests/test-sar-connection.html
+```
+
+## 📱 PWA & Instalación
+
+La aplicación es completamente funcional como PWA:
+
+1. **Desktop**: Chrome/Edge mostrarán icono de instalación en barra de direcciones
+2. **Android**: "Agregar a pantalla de inicio"
+3. **iOS**: Safari > Compartir > "Agregar a pantalla de inicio"
+
+Ver [`docs/PWA_CONVERSION_GUIDE.md`](docs/PWA_CONVERSION_GUIDE.md) para convertir a APK.
+
+## 🌐 Integración NASA API
+
+Para conectar con datos reales de Sentinel-1 SAR:
+
+1. Registrarse en [NASA Earthdata](https://urs.earthdata.nasa.gov/)
+2. Obtener credenciales API
+3. Ver [`docs/NASA_EARTHDATA_INTEGRATION.md`](docs/NASA_EARTHDATA_INTEGRATION.md)
+
+Actualmente usa datos simulados + históricos verificados.
+
+## 🤝 Contribuir
+
+Este es un proyecto de hackathon. Para contribuir:
+
+1. Fork el repositorio
+2. Crea una rama feature (`git checkout -b feature/AmazingFeature`)
+3. Commit cambios (`git commit -m 'Add: nueva característica'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📝 Convenciones de Código
+
+- **JavaScript**: Vanilla ES6+, sin frameworks
+- **CSS**: Variables CSS, BEM-like naming
+- **Comentarios**: JSDoc para funciones importantes
+- **Estructura**: Modular, un archivo por feature domain
+- **Idioma**: Código en inglés, UI en español
+
+## 🏗️ Arquitectura
+
+### Módulos JavaScript:
+
+1. **[script.js](src/js/script.js)** - Sistema de temas, notificaciones
+2. **[map.js](src/js/map.js)** - Leaflet, SAR visualization, timeline
+3. **[alerts.js](src/js/alerts.js)** - Alertas, geolocalización, reportes
+4. **[chatbot.js](src/js/chatbot.js)** - Chatbot educativo
+5. **[game.js](src/js/game.js)** - Gamificación
+6. **[nasa-earthdata-api.js](src/js/nasa-earthdata-api.js)** - API NASA
+
+### Inicialización:
+Todos los módulos se cargan via `<script>` tags y se inicializan automáticamente con `DOMContentLoaded`.
+
+## 📊 Datos
+
+### Fuentes:
+- **INGEMMET** - Instituto Geológico, Minero y Metalúrgico del Perú
+- **INDECI** - Instituto Nacional de Defensa Civil
+- **SENAMHI** - Servicio Nacional de Meteorología e Hidrología
+- **NASA Earthdata** - Sentinel-1 SAR (integración futura)
+
+### Formato:
 ```javascript
-// En map.js, reemplazar SAR_DATA con:
-async function fetchRealSARData(year, bounds) {
-    const response = await fetch(
-        `https://earthdata.nasa.gov/api/sar-data?year=${year}&bbox=${bounds}`
-    );
-    const data = await response.json();
-    return data.features; // GeoJSON format
-}
-```
-
-#### 2. Formato GeoJSON Esperado
-```json
 {
-    "type": "FeatureCollection",
-    "features": [
-        {
-            "type": "Feature",
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [[[-77.05, -12.05], ...]]
-            },
-            "properties": {
-                "intensity": 0.85,
-                "date": "2024-03-15",
-                "type": "flood",
-                "source": "Sentinel-1"
-            }
-        }
-    ]
+  name: 'Desborde Río Rímac - Huachipa',
+  coords: [[-11.9450, -76.9350], ...],
+  intensity: 0.95,
+  type: 'flood',
+  source: 'Río Rímac',
+  verified: true
 }
-```
-
-#### 3. Endpoints Recomendados
-- **Sentinel-1 SAR**: https://scihub.copernicus.eu/
-- **NASA Alaska Satellite Facility**: https://search.asf.alaska.edu/
-- **Google Earth Engine**: https://earthengine.google.com/
-
-Ver comentarios en `map.js` (líneas 630-700) para más detalles.
-
-## 🤖 Modelo de Predicción IA
-
-### Integración con Backend
-```javascript
-// Ejemplo de endpoint de predicción
-async function fetchPredictions(location) {
-    const response = await fetch('/api/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            location: location,
-            historicalData: getHistoricalData()
-        })
-    });
-    return await response.json();
-}
-```
-
-### Modelo Sugerido
-- **TensorFlow.js**: Para predicciones en el navegador
-- **PyTorch/Keras**: En backend con API REST
-- **Input**: Series temporales de datos SAR
-- **Output**: Probabilidades de riesgo por zona geográfica
-
-## 📱 Conversión a PWA y APK
-
-Ver archivo [PWA_CONVERSION_GUIDE.md](PWA_CONVERSION_GUIDE.md) para instrucciones completas de:
-- Conversión a Progressive Web App
-- Generación de APK para Android
-- Despliegue en Google Play Store
-
-## 🧪 Desarrollo
-
-### Modificar Datos SAR Simulados
-Editar el objeto `SAR_DATA` en `map.js`:
-
-```javascript
-const SAR_DATA = {
-    2024: [
-        {
-            coords: [[-12.042, -77.044], ...],
-            intensity: 0.85,  // 0.0 - 1.0
-            type: 'recent'    // 'historical' o 'recent'
-        }
-    ]
-};
-```
-
-### Cambiar Vista Inicial del Mapa
-Editar `MAP_CONFIG` en `map.js`:
-
-```javascript
-const MAP_CONFIG = {
-    initialView: [-12.0464, -77.0428], // [latitud, longitud]
-    initialZoom: 11,                   // 6-18
-    timelineStart: 2015,
-    timelineEnd: 2025
-};
-```
-
-### Personalizar Colores de Capas
-En `createSARPolygon()` (map.js):
-
-```javascript
-const color = isHistorical ? '#808080' : '#4299e1'; // Cambiar colores
 ```
 
 ## 🐛 Troubleshooting
 
-### El mapa no se carga
-- Verificar consola del navegador (F12)
-- Comprobar conexión a internet
-- Verificar que Leaflet.js se cargó correctamente
+**PWA no instala:**
+- Verifica que estés usando HTTPS o localhost
+- Limpia cache del service worker
+- Revisa consola para errores
 
-### Las capas no se muestran
-- Verificar que los checkboxes estén activados
-- Comprobar que el año seleccionado tenga datos
-- Revisar objeto `SAR_DATA` en map.js
+**Mapa no carga:**
+- Verifica conexión a internet (necesita CDN)
+- Revisa consola de errores
+- Verifica rutas de archivos
 
-### La búsqueda de ciudades no funciona
-- Requiere conexión a internet (usa Nominatim de OpenStreetMap)
-- Probar con nombres de ciudades conocidos
-- Verificar en consola si hay errores de red
-
-### El tema no se guarda
-- Verificar que localStorage esté habilitado
-- Comprobar configuración de privacidad del navegador
-- Intentar en modo normal (no incógnito)
+**Datos no aparecen:**
+- Abre consola y busca errores de carga
+- Verifica que `real-flood-data.js` esté cargado
+- Revisa filtro de humedad (slider)
 
 ## 📄 Licencia
 
-MIT License - Libre para uso personal y comercial
+Este proyecto fue desarrollado para el NASA Space Apps Challenge 2024.
 
-## 👥 Contribuciones
+## 👥 Equipo
 
-Contribuciones bienvenidas! Por favor:
-1. Fork el proyecto
-2. Crear feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit cambios (`git commit -m 'Add: AmazingFeature'`)
-4. Push al branch (`git push origin feature/AmazingFeature`)
-5. Abrir Pull Request
-
-## 🙏 Agradecimientos
-
-- **NASA** - Por datos SAR públicos
-- **Leaflet.js** - Librería de mapas
-- **OpenStreetMap** - Tiles y datos geográficos
-- **Leaflet-Geosearch** - Plugin de búsqueda
-
-## 📞 Contacto
-
-Para soporte o preguntas, abrir un Issue en GitHub.
+Desarrollado durante el hackathon NASA Space Apps Challenge - Lima, Perú
 
 ---
 
-**Versión 2.0** - Sistema completo de visualización SAR con predicción IA
+**🌊 HydroSAR Monitor** - Monitoreando el agua desde el espacio

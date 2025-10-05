@@ -1,0 +1,28 @@
+{
+  "name": "hydrosar-monitor",
+  "version": "1.0.0",
+  "description": "Aplicación web progresiva para monitoreo de lluvias e inundaciones usando datos SAR de NASA",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve . -l 8000",
+    "dev": "npx serve . -l 8000",
+    "test": "echo \"No tests configured yet\" && exit 0"
+  },
+  "keywords": [
+    "pwa",
+    "floods",
+    "nasa",
+    "sar",
+    "leaflet",
+    "weather",
+    "peru"
+  ],
+  "author": "NASA Space Apps Challenge Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/hydrosar-monitor.git"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}
