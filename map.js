@@ -86,7 +86,13 @@ function generateInitialMicrozones() {
 
                 // Tamaño ultra pequeño (5-30 metros)
                 const size = 0.00005 + Math.random() * 0.00025;
-                const intensity = 0.3 + Math.random() * 0.6;
+
+                // Generar intensidad con distribución sesgada hacia valores altos
+                const intensityRoll = Math.random();
+                const intensity = intensityRoll < 0.7 ? 0.6 + Math.random() * 0.4 : 0.3 + Math.random() * 0.3;
+
+                // Determinar tipo de dato: 60% inundación, 40% humedad de suelo
+                const dataType = Math.random() < 0.6 ? 'flood' : 'moisture';
 
                 // Crear polígono simple de 3-4 vértices
                 const numVert = Math.random() > 0.5 ? 3 : 4;
@@ -100,7 +106,7 @@ function generateInitialMicrozones() {
                     ]);
                 }
 
-                zones[year].push({ coords, intensity, type });
+                zones[year].push({ coords, intensity, type, dataType });
             }
         });
     });
@@ -388,9 +394,12 @@ function loadDataForCurrentZoom() {
         const baseSize = config.size;
         const size = baseSize * (0.8 + Math.random() * 0.4); // Menos variación
 
+        // Determinar tipo de dato: 60% inundación, 40% humedad de suelo
+        const dataType = Math.random() < 0.6 ? 'flood' : 'moisture';
+
         // Crear polígono
         const coords = createMicrozonePolygon(lat, lng, size);
-        const data = { coords, intensity, type };
+        const data = { coords, intensity, type, dataType };
         const polygon = createSARPolygon(data, year);
 
         // Solo agregar si el polígono fue creado (intensity >= 0.5)
@@ -674,11 +683,18 @@ function createSARPolygon(data, year) {
         return null;
     }
 
-    // Determinar color según antigüedad del dato
-    // Datos recientes (2023-2025) = azul oscuro
-    // Datos antiguos (2015-2022) = celeste
+    // Determinar color según tipo de dato
     const isRecent = year >= 2023;
-    const color = isRecent ? '#2563eb' : '#60a5fa'; // Azul oscuro vs celeste
+    let color;
+
+    if (data.dataType === 'moisture') {
+        // HUMEDAD DE SUELO: Escala de grises (más oscuro = más humedad)
+        const grayValue = Math.floor(100 + (data.intensity * 100)); // 100-200 rango
+        color = `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
+    } else {
+        // INUNDACIÓN: Celeste a azul (más oscuro = más reciente)
+        color = isRecent ? '#2563eb' : '#60a5fa'; // Azul oscuro (reciente) vs celeste (antiguo)
+    }
 
     // Transparencia proporcional a humedad/intensidad
     // Mapear rango [minHumidityThreshold - 1.0] a rango de opacidad [0.0 - 1.0]
@@ -699,6 +715,7 @@ function createSARPolygon(data, year) {
     // Guardar el año y datos en el polígono para uso posterior
     polygon.options.year = year;
     polygon.options.baseIntensity = data.intensity;
+    polygon.options.dataType = data.dataType || 'flood'; // Por defecto inundación si no está especificado
 
     // Aplicar animación de "gota que se desparrama" cuando se añade al mapa
     polygon.on('add', function() {
@@ -718,15 +735,17 @@ function createSARPolygon(data, year) {
         });
     });
 
-    // Determinar color de fondo del año según antigüedad
-    const yearBgColor = isRecent ? '#2563eb' : '#60a5fa';
+    // Determinar icono y color según tipo de dato
+    const isMoisture = data.dataType === 'moisture';
+    const icon = isMoisture ? '💧' : '🌊';
+    const yearBgColor = isMoisture ? '#6b7280' : (isRecent ? '#2563eb' : '#60a5fa');
 
     // Popup con diseño minimalista
     const popupContent = `
         <div class="sar-popup-minimal">
             <div class="popup-humidity">
                 <span class="popup-percentage">${(data.intensity * 100).toFixed(0)}%</span>
-                <span class="popup-drop">💧</span>
+                <span class="popup-drop">${icon}</span>
             </div>
             <div class="popup-year" style="background-color: ${yearBgColor};">
                 ${year}
