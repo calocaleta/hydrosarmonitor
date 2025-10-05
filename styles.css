@@ -590,6 +590,55 @@ body {
     color: var(--text-secondary);
 }
 
+/* Modo acumulado */
+.timeline-mode-toggle {
+    margin-bottom: 0.75rem;
+}
+
+.cumulative-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.cumulative-button svg {
+    transition: all 0.3s ease;
+}
+
+.cumulative-button.active {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+.cumulative-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+/* Slider en modo acumulado (azul) */
+.timeline-slider.cumulative {
+    background: linear-gradient(to right,
+        var(--accent-light) 0%,
+        var(--accent-primary) 100%);
+}
+
+/* Slider en modo año específico (gris) */
+.timeline-slider:not(.cumulative) {
+    background: var(--accent-light);
+}
+
 /* ========================================
    BOTÓN DE PREDICCIÓN IA
    ======================================== */

@@ -26,13 +26,17 @@ let layerGroups = {
 let currentYear = MAP_CONFIG.timelineEnd; // Iniciar en 2025 para mostrar todos los datos
 let predictionMode = false;
 let currentZoomLevel = 11;
+let cumulativeMode = true; // Modo acumulado activado por defecto
 
 // Configuración de niveles de detalle (LOD)
 const LOD_CONFIG = {
-    regional: { minZoom: 6, maxZoom: 10, size: 0.05, count: 20 },      // Áreas grandes: ~5km
-    district: { minZoom: 11, maxZoom: 13, size: 0.005, count: 50 },    // Áreas medianas: ~500m
-    microzone: { minZoom: 14, maxZoom: 18, size: 0.0002, count: 100 }  // Microzonas: ~20m
+    regional: { minZoom: 6, maxZoom: 10, size: 0.015, count: 30, minSeparation: 0.025 },      // Áreas grandes: ~1.5km
+    district: { minZoom: 11, maxZoom: 13, size: 0.0015, count: 70, minSeparation: 0.0025 },   // Áreas medianas: ~150m
+    microzone: { minZoom: 14, maxZoom: 18, size: 0.00008, count: 150, minSeparation: 0.00012 } // Microzonas: ~8m
 };
+
+// Cache de posiciones por año para evitar superposición
+let positionCache = {};
 
 // Función para generar microzonas iniciales automáticamente
 function generateInitialMicrozones() {
@@ -386,8 +390,20 @@ function loadDataForCurrentZoom() {
 
     console.log(`📊 Generando ${config.count} zonas de nivel ${lod} (zoom ${zoom})`);
 
-    // Generar polígonos según el nivel LOD
-    for (let i = 0; i < config.count; i++) {
+    // Reiniciar cache de posiciones para este viewport
+    positionCache = {};
+    yearsToGenerate.forEach(year => {
+        positionCache[year] = [];
+    });
+
+    let generated = 0;
+    let attempts = 0;
+    const maxAttempts = config.count * 5; // Máximo 5 intentos por polígono
+
+    // Generar polígonos según el nivel LOD evitando superposiciones
+    while (generated < config.count && attempts < maxAttempts) {
+        attempts++;
+
         const year = yearsToGenerate[Math.floor(Math.random() * yearsToGenerate.length)];
         const type = year >= 2023 ? 'recent' : 'historical';
         const intensity = 0.3 + Math.random() * 0.6;
@@ -396,9 +412,14 @@ function loadDataForCurrentZoom() {
         const lat = sw.lat + Math.random() * latDiff;
         const lng = sw.lng + Math.random() * lngDiff;
 
-        // Tamaño según nivel LOD con variación
+        // Verificar si hay colisión con otras áreas del mismo año
+        if (hasCollision(lat, lng, year, config.minSeparation)) {
+            continue; // Intentar otra posición
+        }
+
+        // Tamaño reducido para minimizar superposición
         const baseSize = config.size;
-        const size = baseSize * (0.7 + Math.random() * 0.6);
+        const size = baseSize * (0.8 + Math.random() * 0.4); // Menos variación
 
         // Crear polígono
         const coords = createMicrozonePolygon(lat, lng, size);
@@ -407,7 +428,14 @@ function loadDataForCurrentZoom() {
 
         // Agregar a la capa LOD correspondiente
         layerGroups[lod].addLayer(polygon);
+
+        // Guardar posición en cache
+        positionCache[year].push({ lat, lng });
+
+        generated++;
     }
+
+    console.log(`✅ Generadas ${generated} zonas sin superposición (${attempts} intentos)`);
 
     // Mostrar solo la capa del nivel LOD actual
     if (!map.hasLayer(layerGroups[lod])) {
@@ -416,6 +444,31 @@ function loadDataForCurrentZoom() {
 
     // Aplicar transparencia temporal
     updateLayerOpacityByYear(currentYear);
+}
+
+/**
+ * Verifica si una posición colisiona con áreas existentes del mismo año
+ * @param {number} lat - Latitud
+ * @param {number} lng - Longitud
+ * @param {number} year - Año
+ * @param {number} minSeparation - Distancia mínima de separación
+ * @returns {boolean} True si hay colisión
+ */
+function hasCollision(lat, lng, year, minSeparation) {
+    if (!positionCache[year]) return false;
+
+    for (const pos of positionCache[year]) {
+        const distance = Math.sqrt(
+            Math.pow(lat - pos.lat, 2) +
+            Math.pow(lng - pos.lng, 2)
+        );
+
+        if (distance < minSeparation) {
+            return true; // Hay colisión
+        }
+    }
+
+    return false; // No hay colisión
 }
 
 /**
@@ -723,11 +776,19 @@ function initializeTimelineSlider() {
                     <span class="timeline-title">Línea temporal</span>
                     <span class="timeline-year" id="timeline-year">${MAP_CONFIG.timelineEnd}</span>
                 </div>
+                <div class="timeline-mode-toggle">
+                    <button id="cumulative-toggle" class="cumulative-button active">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                        Acumulado
+                    </button>
+                </div>
                 <div class="timeline-slider-container">
                     <input
                         type="range"
                         id="timeline-slider"
-                        class="timeline-slider"
+                        class="timeline-slider cumulative"
                         min="${MAP_CONFIG.timelineStart}"
                         max="${MAP_CONFIG.timelineEnd}"
                         value="${MAP_CONFIG.timelineEnd}"
@@ -742,10 +803,13 @@ function initializeTimelineSlider() {
 
             L.DomEvent.disableClickPropagation(container);
 
-            // Event listener para el slider
+            // Event listeners
             setTimeout(() => {
                 const slider = document.getElementById('timeline-slider');
+                const cumulativeToggle = document.getElementById('cumulative-toggle');
+
                 slider.addEventListener('input', handleTimelineChange);
+                cumulativeToggle.addEventListener('click', toggleCumulativeMode);
             }, 100);
 
             return container;
@@ -753,6 +817,31 @@ function initializeTimelineSlider() {
     });
 
     map.addControl(new sliderControl());
+}
+
+/**
+ * Alterna el modo acumulado
+ */
+function toggleCumulativeMode() {
+    cumulativeMode = !cumulativeMode;
+
+    const button = document.getElementById('cumulative-toggle');
+    const slider = document.getElementById('timeline-slider');
+
+    if (cumulativeMode) {
+        button.classList.add('active');
+        slider.classList.add('cumulative');
+    } else {
+        button.classList.remove('active');
+        slider.classList.remove('cumulative');
+    }
+
+    // Actualizar la visualización
+    updateLayerOpacityByYear(currentYear);
+
+    // Feedback
+    const mode = cumulativeMode ? 'acumulado (2015-' + currentYear + ')' : 'año específico (' + currentYear + ')';
+    showTemporaryNotification(`Modo ${mode}`);
 }
 
 /**
@@ -787,37 +876,66 @@ function updateLayerOpacityByYear(endYear) {
     const updateLayer = (layer) => {
         const layerYear = layer.options.year;
 
-        if (layerYear <= endYear) {
-            // Calcular opacidad progresiva (más antiguo = más transparente)
-            const yearDiff = endYear - layerYear;
-            const ageFactor = yearRange > 0 ? 1 - (yearDiff / yearRange) : 1;
+        if (cumulativeMode) {
+            // MODO ACUMULADO: Mostrar desde 2015 hasta el año seleccionado
+            if (layerYear <= endYear) {
+                // Calcular opacidad progresiva (más antiguo = más transparente)
+                const yearDiff = endYear - layerYear;
+                const ageFactor = yearRange > 0 ? 1 - (yearDiff / yearRange) : 1;
 
-            // Opacidad: 0.15 (muy antiguo) a 0.7 (reciente)
-            const baseOpacity = 0.15 + (ageFactor * 0.55);
-            const fillOpacity = layer.options.baseIntensity * baseOpacity;
+                // Opacidad: 0.15 (muy antiguo) a 0.7 (reciente)
+                const baseOpacity = 0.15 + (ageFactor * 0.55);
+                const fillOpacity = layer.options.baseIntensity * baseOpacity;
 
-            // Opacidad del borde: más sutil para datos antiguos
-            const borderOpacity = 0.2 + (ageFactor * 0.4);
+                // Opacidad del borde: más sutil para datos antiguos
+                const borderOpacity = 0.2 + (ageFactor * 0.4);
 
-            layer.setStyle({
-                color: blueColor,
-                fillColor: blueColor,
-                fillOpacity: fillOpacity,
-                opacity: borderOpacity,
-                weight: 1
-            });
+                layer.setStyle({
+                    color: blueColor,
+                    fillColor: blueColor,
+                    fillOpacity: fillOpacity,
+                    opacity: borderOpacity,
+                    weight: 1
+                });
 
-            // Mostrar el layer con animación
-            if (!map.hasLayer(layer)) {
-                layer.addTo(map);
-                // Re-animar cuando reaparece
-                setTimeout(() => animateDropSplash(layer), 50);
+                // Mostrar el layer con animación
+                if (!map.hasLayer(layer)) {
+                    layer.addTo(map);
+                    // Re-animar cuando reaparece
+                    setTimeout(() => animateDropSplash(layer), 50);
+                }
+            } else {
+                // Ocultar capas del futuro
+                if (map.hasLayer(layer)) {
+                    stopPolygonAnimation(layer);
+                    map.removeLayer(layer);
+                }
             }
         } else {
-            // Ocultar capas del futuro con fade out
-            if (map.hasLayer(layer)) {
-                stopPolygonAnimation(layer);
-                map.removeLayer(layer);
+            // MODO AÑO ESPECÍFICO: Mostrar solo el año seleccionado
+            if (layerYear === endYear) {
+                // Opacidad uniforme para todas las áreas del año
+                const fillOpacity = layer.options.baseIntensity * 0.6;
+
+                layer.setStyle({
+                    color: blueColor,
+                    fillColor: blueColor,
+                    fillOpacity: fillOpacity,
+                    opacity: 0.5,
+                    weight: 1
+                });
+
+                // Mostrar el layer
+                if (!map.hasLayer(layer)) {
+                    layer.addTo(map);
+                    setTimeout(() => animateDropSplash(layer), 50);
+                }
+            } else {
+                // Ocultar todas las demás capas
+                if (map.hasLayer(layer)) {
+                    stopPolygonAnimation(layer);
+                    map.removeLayer(layer);
+                }
             }
         }
     };
