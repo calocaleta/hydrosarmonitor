@@ -515,6 +515,10 @@ function createSARPolygon(data, year) {
         opacity: 0.8
     });
 
+    // Guardar el año en el polígono para uso posterior
+    polygon.options.year = year;
+    polygon.options.baseIntensity = data.intensity;
+
     // Popup con información
     const popupContent = `
         <div class="sar-popup">
@@ -620,11 +624,77 @@ function handleTimelineChange(e) {
     // Actualizar display del año
     document.getElementById('timeline-year').textContent = year;
 
-    // Recargar datos SAR para el nuevo año
-    loadSARData(year);
+    // Aplicar transparencia progresiva basada en antigüedad
+    updateLayerOpacityByYear(year);
 
     // Feedback visual
     showTemporaryNotification(`Mostrando datos hasta ${year}`);
+}
+
+/**
+ * Actualiza la opacidad de todas las capas basado en el año seleccionado
+ * Los datos más antiguos se ven más transparentes
+ * @param {number} endYear - Año final del rango
+ */
+function updateLayerOpacityByYear(endYear) {
+    const startYear = MAP_CONFIG.timelineStart;
+    const yearRange = endYear - startYear;
+
+    // Actualizar opacidad en capa histórica
+    layerGroups.historical.eachLayer(function(layer) {
+        const layerYear = layer.options.year;
+
+        if (layerYear <= endYear) {
+            // Calcular opacidad progresiva (más antiguo = más transparente)
+            const yearDiff = endYear - layerYear;
+            const ageFactor = 1 - (yearDiff / yearRange);
+
+            // Opacidad: 0.2 (muy antiguo) a 0.8 (reciente)
+            const opacity = 0.2 + (ageFactor * 0.6);
+            const fillOpacity = layer.options.baseIntensity * opacity;
+
+            layer.setStyle({
+                fillOpacity: fillOpacity,
+                opacity: opacity
+            });
+
+            // Mostrar el layer
+            if (!map.hasLayer(layer)) {
+                layer.addTo(map);
+            }
+        } else {
+            // Ocultar capas del futuro
+            if (map.hasLayer(layer)) {
+                map.removeLayer(layer);
+            }
+        }
+    });
+
+    // Actualizar opacidad en capa reciente
+    layerGroups.recent.eachLayer(function(layer) {
+        const layerYear = layer.options.year;
+
+        if (layerYear <= endYear) {
+            const yearDiff = endYear - layerYear;
+            const ageFactor = 1 - (yearDiff / yearRange);
+
+            const opacity = 0.2 + (ageFactor * 0.6);
+            const fillOpacity = layer.options.baseIntensity * opacity;
+
+            layer.setStyle({
+                fillOpacity: fillOpacity,
+                opacity: opacity
+            });
+
+            if (!map.hasLayer(layer)) {
+                layer.addTo(map);
+            }
+        } else {
+            if (map.hasLayer(layer)) {
+                map.removeLayer(layer);
+            }
+        }
+    });
 }
 
 // ========================================
