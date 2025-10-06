@@ -40,7 +40,7 @@ const LOD_CONFIG = {
 };
 
 /**
- * Calcula el tamaño de polígono basado en el viewport del mapa (10% del área visible)
+ * Calcula el tamaño de polígono basado en el viewport del mapa (1% del área visible)
  */
 function calculatePolygonSizeFromViewport() {
     const bounds = map.getBounds();
@@ -50,12 +50,12 @@ function calculatePolygonSizeFromViewport() {
     // Usar el promedio de las diferencias para obtener un tamaño proporcional
     const avgDiff = (latDiff + lngDiff) / 2;
 
-    // Retornar 10% del viewport visible como radio del polígono
-    return avgDiff * 0.1;
+    // Retornar 1% del viewport visible como radio del polígono
+    return avgDiff * 0.01;
 }
 
 /**
- * Escala las coordenadas de un polígono para que tengan un tamaño proporcional al viewport (10%)
+ * Escala las coordenadas de un polígono para que tengan un tamaño proporcional al viewport (1%)
  * @param {Array} coords - Array de coordenadas [[lat, lng], ...]
  * @returns {Array} - Coordenadas escaladas
  */
@@ -81,7 +81,7 @@ function scalePolygonToViewport(coords) {
     });
     avgRadius /= coords.length;
 
-    // Calcular el tamaño deseado (10% del viewport)
+    // Calcular el tamaño deseado (1% del viewport)
     const desiredSize = calculatePolygonSizeFromViewport();
 
     // Calcular el factor de escala
@@ -741,7 +741,7 @@ function createSARPolygon(data, year) {
     const opacityRange = 1.0 - minHumidityThreshold;
     const fillOpacity = opacityRange > 0 ? (data.intensity - minHumidityThreshold) / opacityRange : 1.0;
 
-    // Escalar las coordenadas para que sean proporcionales al viewport (10% del área visible)
+    // Escalar las coordenadas para que sean proporcionales al viewport (1% del área visible)
     const scaledCoords = scalePolygonToViewport(data.coords);
 
     const polygon = L.polygon(scaledCoords, {
