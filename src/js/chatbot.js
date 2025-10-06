@@ -227,7 +227,13 @@ function openChat() {
         </div>
     `;
 
-    document.body.appendChild(chatContainer);
+    // Agregar al contenedor del mapa en lugar de body
+    const mapContainer = document.getElementById('map-container');
+    if (mapContainer) {
+        mapContainer.appendChild(chatContainer);
+    } else {
+        document.body.appendChild(chatContainer);
+    }
 
     // Animación de entrada
     setTimeout(() => chatContainer.classList.add('show'), 100);

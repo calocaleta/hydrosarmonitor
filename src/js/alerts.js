@@ -75,8 +75,8 @@ function initializeAlertSystem() {
     // Obtener ubicación del usuario
     getUserLocation();
 
-    // Renderizar zonas de riesgo en el mapa
-    renderRiskZones();
+    // Renderizar zonas de riesgo en el mapa (deshabilitado)
+    // renderRiskZones();
 
     // Crear botón flotante de reporte (deshabilitado - ahora está en el mapa)
     // createReportButton();
