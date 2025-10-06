@@ -277,7 +277,7 @@ function addSearchControl() {
         retainZoomLevel: false,
         animateZoom: true,
         keepResult: true,
-        searchLabel: 'Buscar localidad...'
+        searchLabel: 'Search location...'
     });
 
     map.addControl(searchControl);
@@ -886,7 +886,7 @@ function initializeTimelineSlider() {
                         </svg>
                     </button>
                     <span class="timeline-icon">📅</span>
-                    <span class="timeline-title">Línea temporal</span>
+                    <span class="timeline-title">Timeline</span>
                     <span class="timeline-year" id="timeline-year">${MAP_CONFIG.timelineEnd}</span>
                 </div>
                 <div class="timeline-content" id="timeline-content" style="display: none;">
@@ -895,7 +895,7 @@ function initializeTimelineSlider() {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                         </svg>
-                        Acumulado
+                        Cumulative
                     </button>
                 </div>
                 <div class="timeline-slider-container">
@@ -916,7 +916,7 @@ function initializeTimelineSlider() {
                 <div class="humidity-slider-container">
                     <div class="humidity-header">
                         <span class="humidity-icon">💧</span>
-                        <span class="humidity-title">Humedad mínima</span>
+                        <span class="humidity-title">Minimum humidity</span>
                         <span class="humidity-value" id="humidity-value">80%</span>
                     </div>
                     <input
@@ -1036,7 +1036,7 @@ function updatePanelSummary() {
     const summaryText = document.getElementById('summary-text');
     const year = currentYear;
     const humidity = Math.round(minHumidityThreshold * 100);
-    const mode = cumulativeMode ? 'Acumulado' : 'Año específico';
+    const mode = cumulativeMode ? 'Cumulative' : 'Specific year';
 
     const filters = [];
     if (showFloodData) filters.push('🌊');
@@ -1780,30 +1780,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Inicializar el mapa (rápido)
     initializeMap();
-    LoadingManager.addStep('✅ Mapa inicializado', true);
+    LoadingManager.addStep('✅ Map initialized', true);
     LoadingManager.setProgress(60);
 
-    // Inicializar tour de eventos históricos
+    // Initialize historical events tour
     initializeHistoricalEventsTour();
     console.log('✅ Tour de eventos históricos inicializado');
 
-    // PASO 3: Configurar carga MANUAL de NASA API (click en badge)
-    LoadingManager.setStatus('Listo - Click en badge NASA para cargar datos');
-    LoadingManager.addStep('ℹ️ NASA API: Click en el badge para cargar datos', false, true);
+    // STEP 3: Configure MANUAL NASA API loading (click on badge)
+    LoadingManager.setStatus('Ready - Click NASA badge to load data');
+    LoadingManager.addStep('ℹ️ NASA API: Click badge to load data', false, true);
 
-    // Inicializar badge de NASA en modo manual
+    // Initialize NASA badge in manual mode
     const historicalCount = window.REAL_FLOOD_DATA ?
         Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
-    updateDataStatusBadge(historicalCount, null); // null = no cargado aún
+    updateDataStatusBadge(historicalCount, null); // null = not loaded yet
 
-    // Configurar evento click en el badge de NASA
+    // Configure click event on NASA badge
     setupNASAManualLoad();
 
-    // PASO 4: Ocultar loading screen (mapa ya está listo)
+    // STEP 4: Hide loading screen (map is ready)
     setTimeout(() => {
-        LoadingManager.setStatus('¡Listo!');
+        LoadingManager.setStatus('Ready!');
         LoadingManager.setProgress(100);
-        LoadingManager.addStep('✅ Aplicación lista para usar', true);
+        LoadingManager.addStep('✅ Application ready to use', true);
 
         setTimeout(() => {
             LoadingManager.hide();
@@ -1938,7 +1938,7 @@ function updateDataStatusBadge(historicalCount, nasaCount, nasaError = false) {
             nasaIcon.className = 'status-icon status-inactive';
         }
         if (nasaCountEl) {
-            nasaCountEl.textContent = 'Click para cargar';
+            nasaCountEl.textContent = 'Click to load';
             nasaCountEl.style.cursor = 'pointer';
         }
     } else if (nasaError) {
