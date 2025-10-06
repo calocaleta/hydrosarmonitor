@@ -1,0 +1,385 @@
+/* ========================================
+   PANEL DE CAPAS NASA SAR
+   ======================================== */
+/* Estilos para el panel de gestión de capas Sentinel-1 SAR */
+
+/* Contenedor del panel */
+.nasa-layers-panel {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.nasa-layers-panel > * {
+    pointer-events: auto;
+}
+
+/* Botón de toggle */
+.nasa-panel-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 12px 16px;
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.nasa-panel-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--shadow);
+    background: var(--accent-secondary);
+}
+
+.nasa-panel-toggle.active {
+    background: var(--accent-secondary);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.panel-text {
+    font-size: 0.85rem;
+}
+
+/* Contenido del panel */
+.nasa-panel-content {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    margin-top: 12px;
+    padding: 16px;
+    max-width: 320px;
+    max-height: 500px;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px var(--shadow);
+    border: 1px solid var(--border);
+}
+
+/* Header del panel */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.panel-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.panel-close:hover {
+    background: var(--accent-light);
+    color: var(--accent-primary);
+}
+
+/* Descripción del panel */
+.panel-description {
+    margin-bottom: 16px;
+}
+
+.panel-description p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Lista de capas */
+.nasa-layers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+/* Item de capa */
+.nasa-layer-item {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.2s ease;
+}
+
+.nasa-layer-item:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Header de capa */
+.layer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.layer-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.layer-checkbox {
+    margin-top: 2px;
+    cursor: pointer;
+    accent-color: var(--accent-primary);
+}
+
+.layer-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.4;
+}
+
+.layer-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    margin-left: 8px;
+}
+
+/* Controles de capa */
+.layer-controls {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    transition: all 0.3s ease;
+}
+
+.layer-controls.hidden {
+    display: none;
+}
+
+/* Control de opacidad */
+.opacity-control {
+    margin-bottom: 8px;
+}
+
+.opacity-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.opacity-value {
+    font-weight: 600;
+    color: var(--accent-primary);
+}
+
+.opacity-slider {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--accent-light);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+
+.opacity-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    box-shadow: 0 2px 4px var(--shadow);
+    transition: all 0.2s ease;
+}
+
+.opacity-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 8px var(--shadow);
+}
+
+.opacity-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px var(--shadow);
+    transition: all 0.2s ease;
+}
+
+.opacity-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 8px var(--shadow);
+}
+
+/* Información de capa */
+.layer-info {
+    margin-top: 8px;
+}
+
+.layer-info small {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Footer del panel */
+.panel-footer {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.refresh-button {
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.refresh-button:hover {
+    background: var(--accent-light);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+/* Estado vacío */
+.nasa-empty-state {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--text-secondary);
+}
+
+.nasa-empty-state p {
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+}
+
+.nasa-empty-state small {
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.nasa-empty-state code {
+    background: var(--bg-primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: var(--accent-primary);
+}
+
+/* Estado de carga */
+.loading-layers {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--text-secondary);
+}
+
+.loading-layers p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+    .nasa-layers-panel {
+        right: 10px;
+        top: auto;
+        bottom: 80px;
+        transform: none;
+    }
+
+    .nasa-panel-content {
+        max-width: calc(100vw - 40px);
+        max-height: 60vh;
+    }
+
+    .panel-text {
+        display: none;
+    }
+
+    .nasa-panel-toggle {
+        padding: 10px 12px;
+        font-size: 1.2rem;
+    }
+}
+
+/* Scrollbar personalizado para el panel */
+.nasa-panel-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.nasa-panel-content::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+    border-radius: 3px;
+}
+
+.nasa-panel-content::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 3px;
+}
+
+.nasa-panel-content::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
+}

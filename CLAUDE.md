@@ -141,6 +141,29 @@ Gamification for user engagement:
 - Converts granules to event polygons
 - Token hardcoded (⚠️ security issue - needs backend in production)
 
+**6. NASA Layers Manager ([src/js/nasa-layers-manager.js](src/js/nasa-layers-manager.js:1))**
+
+System for managing SAR tile overlays from processed Sentinel-1 GeoTIFF files:
+
+- **Tile Loading:** L.TileLayer integration with Leaflet for PNG tiles
+- **Layer Index:** `layers-index.json` registry of available layers
+- **UI Panel:** Collapsible sidebar with layer checkboxes and opacity sliders
+- **Cache Strategy:** localStorage cache (24h validity) + Service Worker
+- **Key Functions:**
+  - `loadLayer(layerId)` - Adds tile overlay to map
+  - `unloadLayer(layerId)` - Removes tile overlay
+  - `setLayerOpacity(layerId, opacity)` - Adjusts transparency
+  - `refreshIndex()` - Reloads layers registry
+
+**Tile Structure:**
+```
+nasa-layers/
+├── layers-index.json
+└── YYYY-MM-DD_sentinel1/
+    ├── metadata.json
+    └── tiles/{z}/{x}/{y}.png
+```
+
 ### Inter-Module Communication
 
 Modules communicate via `window` object global functions:
@@ -295,6 +318,34 @@ Edit `RISK_ZONES` in [src/js/alerts.js](src/js/alerts.js:23-57):
 
 Alert radius (1000m) configurable in `ALERT_CONFIG`.
 
+### Processing Sentinel-1 SAR Files to Tiles
+
+To add new SAR overlay layers from GeoTIFF files:
+
+**1. Download Sentinel-1 GRD product** from ASF (https://search.asf.alaska.edu/)
+
+**2. Place ZIP file in `src/data/`**
+
+**3. Update script path** in [tools/process-sar-tiff.py](tools/process-sar-tiff.py:11):
+```python
+"input_zip": "src/data/S1A_IW_GRDH_1SDV_YYYYMMDDTHHMMSS_*.zip"
+```
+
+**4. Run processing script:**
+```bash
+python tools/process-sar-tiff.py
+```
+
+**5. Script automatically:**
+- Extracts GeoTIFF from ZIP
+- Generates PNG tiles (zoom 10-15)
+- Creates metadata.json
+- Updates layers-index.json
+
+**6. Refresh app** and activate layer from "🛰️ Capas SAR" panel
+
+See [docs/SAR_PROCESSING_GUIDE.md](docs/SAR_PROCESSING_GUIDE.md) for full guide.
+
 ## Important Constraints
 
 ### What NOT to Change
@@ -424,6 +475,7 @@ Run Lighthouse audit:
 - **[README.md](README.md)** - User-facing documentation, features, quick start
 - **[docs/README.md](docs/README.md)** - Technical documentation (Spanish)
 - **[docs/NASA_EARTHDATA_INTEGRATION.md](docs/NASA_EARTHDATA_INTEGRATION.md)** - API integration details
+- **[docs/SAR_PROCESSING_GUIDE.md](docs/SAR_PROCESSING_GUIDE.md)** - Complete guide to process Sentinel-1 GeoTIFF to PNG tiles
 - **[docs/PWA_CONVERSION_GUIDE.md](docs/PWA_CONVERSION_GUIDE.md)** - APK conversion guide
 - **[docs/DATOS_REALES.md](docs/DATOS_REALES.md)** - Historical data documentation
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines, commit conventions

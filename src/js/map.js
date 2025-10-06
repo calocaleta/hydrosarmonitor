@@ -32,12 +32,68 @@ let currentOpenPopup = null; // Trackear popup abierto actualmente
 let showFloodData = true; // Mostrar inundaciones (activo por defecto)
 let showMoistureData = false; // Mostrar humedad (inactivo por defecto)
 
-// Configuración de niveles de detalle (LOD)
+// Configuración de niveles de detalle (LOD) - Los tamaños ahora se calculan dinámicamente
 const LOD_CONFIG = {
-    regional: { minZoom: 6, maxZoom: 10, size: 0.015, count: 30, minSeparation: 0.025 },      // Áreas grandes: ~1.5km
-    district: { minZoom: 11, maxZoom: 13, size: 0.0015, count: 70, minSeparation: 0.0025 },   // Áreas medianas: ~150m
-    microzone: { minZoom: 14, maxZoom: 18, size: 0.00008, count: 150, minSeparation: 0.00012 } // Microzonas: ~8m
+    regional: { minZoom: 6, maxZoom: 10, count: 30, minSeparation: 0.025 },      // Áreas grandes
+    district: { minZoom: 11, maxZoom: 13, count: 70, minSeparation: 0.0025 },   // Áreas medianas
+    microzone: { minZoom: 14, maxZoom: 18, count: 150, minSeparation: 0.00012 } // Microzonas
 };
+
+/**
+ * Calcula el tamaño de polígono basado en el viewport del mapa (10% del área visible)
+ */
+function calculatePolygonSizeFromViewport() {
+    const bounds = map.getBounds();
+    const latDiff = bounds.getNorth() - bounds.getSouth();
+    const lngDiff = bounds.getEast() - bounds.getWest();
+
+    // Usar el promedio de las diferencias para obtener un tamaño proporcional
+    const avgDiff = (latDiff + lngDiff) / 2;
+
+    // Retornar 10% del viewport visible como radio del polígono
+    return avgDiff * 0.1;
+}
+
+/**
+ * Escala las coordenadas de un polígono para que tengan un tamaño proporcional al viewport (10%)
+ * @param {Array} coords - Array de coordenadas [[lat, lng], ...]
+ * @returns {Array} - Coordenadas escaladas
+ */
+function scalePolygonToViewport(coords) {
+    if (!coords || coords.length < 3) return coords;
+
+    // Calcular el centro del polígono
+    let centerLat = 0, centerLng = 0;
+    coords.forEach(coord => {
+        centerLat += coord[0];
+        centerLng += coord[1];
+    });
+    centerLat /= coords.length;
+    centerLng /= coords.length;
+
+    // Calcular el tamaño actual del polígono (radio promedio desde el centro)
+    let avgRadius = 0;
+    coords.forEach(coord => {
+        const latDiff = coord[0] - centerLat;
+        const lngDiff = coord[1] - centerLng;
+        const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+        avgRadius += distance;
+    });
+    avgRadius /= coords.length;
+
+    // Calcular el tamaño deseado (10% del viewport)
+    const desiredSize = calculatePolygonSizeFromViewport();
+
+    // Calcular el factor de escala
+    const scaleFactor = avgRadius > 0 ? desiredSize / avgRadius : 1;
+
+    // Escalar cada coordenada desde el centro
+    return coords.map(coord => {
+        const latDiff = (coord[0] - centerLat) * scaleFactor;
+        const lngDiff = (coord[1] - centerLng) * scaleFactor;
+        return [centerLat + latDiff, centerLng + lngDiff];
+    });
+}
 
 // Cache de posiciones por año para evitar superposición
 let positionCache = {};
@@ -262,22 +318,14 @@ function addMapMovementListeners() {
 
         currentZoomLevel = newZoom;
 
-        if (oldLOD !== newLOD) {
-            // Cambio de nivel de detalle: limpiar y recargar
-            console.log(`🔍 Cambio de LOD: ${oldLOD} → ${newLOD}`);
-            clearAllLayers();
+        // Siempre limpiar y recargar para actualizar el tamaño de los polígonos según viewport
+        console.log(`🔍 Zoom cambiado: ${oldZoom} → ${newZoom} (LOD: ${newLOD})`);
+        clearAllLayers();
 
-            clearTimeout(zoomTimeout);
-            zoomTimeout = setTimeout(() => {
-                loadDataForCurrentZoom();
-            }, 300);
-        } else {
-            // Mismo nivel LOD: solo añadir más datos
-            clearTimeout(zoomTimeout);
-            zoomTimeout = setTimeout(() => {
-                loadDataForCurrentZoom();
-            }, 500);
-        }
+        clearTimeout(zoomTimeout);
+        zoomTimeout = setTimeout(() => {
+            loadDataForCurrentZoom();
+        }, 300);
     });
 }
 
@@ -357,8 +405,8 @@ function loadDataForCurrentZoom() {
             continue; // Intentar otra posición
         }
 
-        // Tamaño reducido para minimizar superposición
-        const baseSize = config.size;
+        // Tamaño calculado dinámicamente según viewport (10% del área visible)
+        const baseSize = calculatePolygonSizeFromViewport();
         const size = baseSize * (0.8 + Math.random() * 0.4); // Menos variación
 
         // Determinar tipo de dato: 60% inundación, 40% humedad de suelo
@@ -693,7 +741,10 @@ function createSARPolygon(data, year) {
     const opacityRange = 1.0 - minHumidityThreshold;
     const fillOpacity = opacityRange > 0 ? (data.intensity - minHumidityThreshold) / opacityRange : 1.0;
 
-    const polygon = L.polygon(data.coords, {
+    // Escalar las coordenadas para que sean proporcionales al viewport (10% del área visible)
+    const scaledCoords = scalePolygonToViewport(data.coords);
+
+    const polygon = L.polygon(scaledCoords, {
         color: color,
         fillColor: color,
         fillOpacity: fillOpacity,

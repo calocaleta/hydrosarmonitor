@@ -1,0 +1,18 @@
+{
+  "layers": [],
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-10-05",
+    "description": "Registro de capas SAR de NASA Sentinel-1 para HydroSAR Monitor",
+    "notes": [
+      "Este archivo indexa todas las capas SAR disponibles en la aplicación",
+      "Las capas se cargan dinámicamente desde el panel 'Capas SAR'",
+      "Para agregar nuevas capas, ejecuta: python tools/process-sar-tiff.py"
+    ]
+  },
+  "instructions": {
+    "addNewLayer": "Ejecuta 'python tools/process-sar-tiff.py' con tu archivo ZIP de Sentinel-1",
+    "tilesFormat": "src/data/nasa-layers/{YYYY-MM-DD}_sentinel1/tiles/{z}/{x}/{y}.png",
+    "supportedZoomLevels": "10-15 (optimizado para visualización SAR urbana)"
+  }
+}

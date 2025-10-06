@@ -253,6 +253,11 @@ data/raw/
 data/*.csv
 data/*.json
 
+# Archivos SAR grandes
+src/data/*.tiff
+src/data/*.tif
+src/data/*.zip
+
 # Reportes ciudadanos (si se guardan en archivos)
 reports/
 user-reports/

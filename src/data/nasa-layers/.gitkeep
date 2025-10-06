@@ -1,0 +1,15 @@
+# Este directorio contiene tiles PNG de Sentinel-1 SAR
+#
+# Estructura:
+# nasa-layers/
+# ├── layers-index.json
+# ├── 2023-03-29_sentinel1/
+# │   ├── tiles/
+# │   │   ├── 10/
+# │   │   ├── 11/
+# │   │   └── ...
+# │   └── metadata.json
+# └── 2024-XX-XX_sentinel1/
+#
+# Para generar tiles desde archivos TIFF:
+# python tools/process-sar-tiff.py
