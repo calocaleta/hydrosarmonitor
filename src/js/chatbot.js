@@ -203,11 +203,11 @@ function openChat() {
             <div class="chat-header-info">
                 <div class="chat-avatar">🤖</div>
                 <div class="chat-header-text">
-                    <h3>Asistente HydroSAR</h3>
-                    <span class="chat-status">● En línea</span>
+                    <h3>HydroSAR Assistant</h3>
+                    <span class="chat-status">● Online</span>
                 </div>
             </div>
-            <button class="chat-close" onclick="closeChat()" aria-label="Cerrar chat">×</button>
+            <button class="chat-close" onclick="closeChat()" aria-label="Close chat">×</button>
         </div>
         <div class="chat-messages" id="chat-messages"></div>
         <div class="chat-input-container">
@@ -215,7 +215,7 @@ function openChat() {
                 type="text"
                 class="chat-input"
                 id="chat-input"
-                placeholder="Escribe tu pregunta..."
+                placeholder="Type your question..."
                 autocomplete="off"
             >
             <button class="chat-send" id="chat-send" onclick="sendMessage()">

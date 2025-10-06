@@ -4,8 +4,8 @@
 
 // Configuración inicial del mapa
 const MAP_CONFIG = {
-    initialView: [-12.0464, -77.0428], // Lima, Perú
-    initialZoom: 11,
+    initialView: [-11.9444, -76.7092], // Chosica, Lima, Perú
+    initialZoom: 13,
     minZoom: 6,
     maxZoom: 18,
     timelineStart: 2015,
@@ -1372,7 +1372,7 @@ function initializeAIHelpButton() {
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
                     <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
-                <span>Asistente HydroSAR</span>
+                <span>HydroSAR Assistant</span>
             `;
 
             L.DomEvent.disableClickPropagation(container);
