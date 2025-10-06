@@ -2470,6 +2470,86 @@ body {
     display: block;
 }
 
+/* Nota de la galería */
+.gallery-note {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
+    border-left: 4px solid #3b82f6;
+    border-radius: 12px;
+}
+
+[data-theme="dark"] .gallery-note {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1));
+}
+
+.gallery-note h4 {
+    margin: 0 0 1rem 0;
+    color: #3b82f6;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.gallery-note p {
+    margin: 0 0 1rem 0;
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+[data-theme="dark"] .gallery-note p {
+    color: #cbd5e1;
+}
+
+.gallery-note p:last-child {
+    margin-bottom: 0;
+}
+
+.sentinel-files {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.sentinel-files li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.sentinel-files li:last-child {
+    border-bottom: none;
+}
+
+.sentinel-files code {
+    background: rgba(59, 130, 246, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #2563eb;
+    word-break: break-all;
+}
+
+[data-theme="dark"] .sentinel-files code {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+.gallery-achievement {
+    background: rgba(34, 197, 94, 0.1);
+    border-left: 3px solid #22c55e;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+[data-theme="dark"] .gallery-achievement {
+    background: rgba(34, 197, 94, 0.15);
+}
+
+.gallery-achievement strong {
+    color: #22c55e;
+}
+
 /* Modal de imagen de galería */
 .gallery-image-modal {
     position: fixed;
@@ -2628,6 +2708,14 @@ body {
 
     .methodology-icon {
         font-size: 2.5rem;
+    }
+
+    .gallery-note {
+        padding: 1rem;
+    }
+
+    .sentinel-files code {
+        font-size: 0.7rem;
     }
 }
 

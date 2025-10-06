@@ -874,6 +874,52 @@ function openTeamModal() {
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar10.png')">
                         <img src="assets/team/sar10.png" alt="Proceso SAR 10" loading="lazy">
                     </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar11.png')">
+                        <img src="assets/team/sar11.png" alt="Proceso SAR 11" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar12.png')">
+                        <img src="assets/team/sar12.png" alt="Proceso SAR 12" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar13.png')">
+                        <img src="assets/team/sar13.png" alt="Proceso SAR 13" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar14.png')">
+                        <img src="assets/team/sar14.png" alt="Proceso SAR 14" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar15.png')">
+                        <img src="assets/team/sar15.png" alt="Proceso SAR 15" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar16.jpg')">
+                        <img src="assets/team/sar16.jpg" alt="Proceso SAR 16" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar17.png')">
+                        <img src="assets/team/sar17.png" alt="Proceso SAR 17" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar18.png')">
+                        <img src="assets/team/sar18.png" alt="Proceso SAR 18" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar19.png')">
+                        <img src="assets/team/sar19.png" alt="Proceso SAR 19" loading="lazy">
+                    </div>
+                </div>
+
+                <div class="gallery-note">
+                    <h4>🛰️ Datos Reales de Sentinel-1 Descargados</h4>
+                    <p>
+                        Durante el desarrollo, logramos descargar y procesar datos reales de Sentinel-1 de la NASA para la región de Lima:
+                    </p>
+                    <ul class="sentinel-files">
+                        <li><code>S1A_IW_GRDH_1SDV_20230317T233420_20230317T233449_047690_05BA85_858E.zip</code></li>
+                        <li><code>S1A_IW_GRDH_1SDV_20230104T233421_20230104T233450_046640_05971D_AFA9.zip</code></li>
+                        <li><code>S1A_IW_GRDH_1SDV_20230209T233420_20230209T233449_047165_05A8B7_0271.zip</code></li>
+                        <li><code>S1A_IW_GRDH_1SDV_20230305T233420_20230305T233449_047515_05B499_B198.zip</code></li>
+                    </ul>
+                    <p>
+                        Estos archivos GeoTIFF de alta resolución demostraron nuestra capacidad para acceder y trabajar con datos SAR reales de NASA.
+                        El procesamiento completo (recorte, proyección y generación de tiles para superposición en mapa) quedó como implementación
+                        futura debido a las limitaciones de tiempo del Hackathon. Dicha información estaba planteada que sea visible al presionar
+                        el botón NASA, permitiendo visualización en tiempo real de datos satelitales oficiales.
+                    </p>
                 </div>
             </div>
 
