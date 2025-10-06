@@ -510,7 +510,7 @@ function createReportButton() {
     button.className = 'report-floating-button';
     button.innerHTML = `
         <span class="report-icon">⚠️</span>
-        <span class="report-text">Reportar zona afectada</span>
+        <span class="report-text">Report affected area</span>
     `;
     button.onclick = openReportForm;
 
@@ -551,46 +551,46 @@ function openReportForm() {
     modal.innerHTML = `
         <div class="report-modal-content">
             <div class="report-modal-header">
-                <h2>📢 Reportar Zona Afectada</h2>
+                <h2>📢 Report Affected Area</h2>
                 <button class="report-modal-close" onclick="closeReportForm()">×</button>
             </div>
             <div class="report-modal-body">
                 <form id="report-form" onsubmit="submitReport(event)">
                     <div class="form-group">
-                        <label for="reporter-name">Nombre (opcional)</label>
+                        <label for="reporter-name">Name (optional)</label>
                         <input
                             type="text"
                             id="reporter-name"
                             class="form-input"
-                            placeholder="Ej: Juan Pérez"
+                            placeholder="E.g.: John Doe"
                         >
                     </div>
 
                     <div class="form-group">
-                        <label for="incident-type">Tipo de incidente *</label>
+                        <label for="incident-type">Incident type *</label>
                         <select id="incident-type" class="form-input" required>
-                            <option value="">Seleccionar...</option>
-                            <option value="huayco">Huayco / Deslizamiento</option>
-                            <option value="inundacion">Inundación</option>
-                            <option value="lluvia-intensa">Lluvia intensa</option>
-                            <option value="derrumbe">Derrumbe</option>
-                            <option value="otro">Otro</option>
+                            <option value="">Select...</option>
+                            <option value="huayco">Debris Flow / Landslide</option>
+                            <option value="inundacion">Flood</option>
+                            <option value="lluvia-intensa">Heavy Rainfall</option>
+                            <option value="derrumbe">Collapse</option>
+                            <option value="otro">Other</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="incident-description">Descripción del incidente *</label>
+                        <label for="incident-description">Incident description *</label>
                         <textarea
                             id="incident-description"
                             class="form-textarea"
                             rows="4"
-                            placeholder="Describe brevemente lo que está ocurriendo..."
+                            placeholder="Briefly describe what is happening..."
                             required
                         ></textarea>
                     </div>
 
                     <div class="form-group">
-                        <label>📍 Ubicación (detectada automáticamente)</label>
+                        <label>📍 Location (automatically detected)</label>
                         <div class="location-display">
                             <input
                                 type="text"
@@ -611,16 +611,16 @@ function openReportForm() {
                             </button>
                         </div>
                         <small class="form-help">
-                            ${userLocation?.simulated ? '⚠️ Ubicación simulada para demo' : '✓ Ubicación GPS actual'}
+                            ${userLocation?.simulated ? '⚠️ Simulated location for demo' : '✓ Current GPS location'}
                         </small>
                     </div>
 
                     <div class="form-actions">
                         <button type="button" onclick="closeReportForm()" class="btn-cancel">
-                            Cancelar
+                            Cancel
                         </button>
                         <button type="submit" class="btn-submit">
-                            ✅ Enviar reporte
+                            ✅ Submit report
                         </button>
                     </div>
                 </form>
@@ -759,28 +759,26 @@ function openTeamModal() {
             <button class="team-close-btn" onclick="closeTeamModal()">×</button>
 
             <div class="team-header">
-                <h2>🚀 Equipo 2G - Two Generations</h2>
+                <h2>🚀 Team 2G - Two Generations</h2>
                 <p class="team-subtitle">NASA Space Apps Challenge 2024</p>
             </div>
 
             <div class="team-motivation">
-                <h3>💡 Nuestra Motivación</h3>
+                <h3>💡 Our Motivation</h3>
                 <p>
-                    Somos 2G — TWO GENERATIONS.<br><br>
-                    Nuestro equipo une a participantes de dos generaciones distintas, donde conviven el pensamiento fresco,
-                    tecnológico y disruptivo con el conocimiento acumulado, la experiencia probada y la visión estratégica.
-                    Esta sinergia nos permite abordar problemas complejos con velocidad y creatividad, pero también con
-                    disciplina y método.<br><br>
-                    Trabajamos para que los datos espaciales abiertos se conviertan en soluciones útiles, reproducibles y
-                    científicamente sólidas, generando impacto tangible en la exploración, la gestión de recursos y la
-                    innovación tecnológica. Creemos que la ciencia avanza más rápido cuando distintas generaciones colaboran,
-                    porque cada época aporta fortalezas únicas. Nuestro propósito es claro: cambiar el mundo con conocimiento,
-                    rigor y pasión compartida por la ciencia.
+                    We are 2G — TWO GENERATIONS.<br><br>
+                    Our team brings together participants from two different generations, where fresh, technological, and disruptive thinking
+                    coexists with accumulated knowledge, proven experience, and strategic vision. This synergy allows us to tackle complex
+                    problems with speed and creativity, but also with discipline and method.<br><br>
+                    We work to transform open spatial data into useful, reproducible, and scientifically sound solutions, generating tangible
+                    impact in exploration, resource management, and technological innovation. We believe science advances faster when different
+                    generations collaborate, because each era brings unique strengths. Our purpose is clear: to change the world with knowledge,
+                    rigor, and shared passion for science.
                 </p>
             </div>
 
             <div class="team-members">
-                <h3>👥 Integrantes del Equipo</h3>
+                <h3>👥 Team Members</h3>
 
                 <div class="team-member">
                     <div class="member-photo">
@@ -788,7 +786,7 @@ function openTeamModal() {
                     </div>
                     <div class="member-info">
                         <h4>Carlos A. Garcia Gonzales</h4>
-                        <p class="member-role">Líder del Proyecto / Scrum Master</p>
+                        <p class="member-role">Project Leader / Scrum Master</p>
                     </div>
                 </div>
 
@@ -798,7 +796,7 @@ function openTeamModal() {
                     </div>
                     <div class="member-info">
                         <h4>Carlos Gabriel Garcia Pocore</h4>
-                        <p class="member-role">Software Developer / Conocedor de SAR</p>
+                        <p class="member-role">Software Developer / SAR Specialist</p>
                     </div>
                 </div>
 
@@ -814,99 +812,99 @@ function openTeamModal() {
             </div>
 
             <div class="team-methodology">
-                <h3>🎯 Nuestra Metodología</h3>
+                <h3>🎯 Our Methodology</h3>
                 <div class="methodology-content">
                     <div class="methodology-item">
                         <div class="methodology-icon">💡</div>
                         <div class="methodology-text">
                             <h4>Design Thinking</h4>
-                            <p>Utilizamos Design Thinking para identificar el problema real y proponer una solución óptima que se presenta a través de este aplicativo.</p>
+                            <p>We used Design Thinking to identify the real problem and propose an optimal solution presented through this application.</p>
                         </div>
                     </div>
                     <div class="methodology-item">
                         <div class="methodology-icon">🚀</div>
                         <div class="methodology-text">
-                            <h4>SCRUM para Hackathon</h4>
-                            <p>Trabajamos con metodología SCRUM orientada a Hackathon, permitiendo iteraciones rápidas y entrega continua de valor.</p>
+                            <h4>SCRUM for Hackathon</h4>
+                            <p>We worked with SCRUM methodology oriented to Hackathon, enabling rapid iterations and continuous value delivery.</p>
                         </div>
                     </div>
                     <div class="methodology-item">
                         <div class="methodology-icon">👨‍🏫</div>
                         <div class="methodology-text">
-                            <h4>Asesoría Especializada</h4>
-                            <p>Contamos con asesoría especializada facilitada por el comité de la Hackathon NASA Space Apps Challenge 2024.</p>
+                            <h4>Specialized Advice</h4>
+                            <p>We had specialized advice facilitated by the NASA Space Apps Challenge 2024 Hackathon committee.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="team-gallery">
-                <h3>📸 Galería del Proceso</h3>
-                <p class="gallery-description">Registro visual de nuestro trabajo durante la Hackathon</p>
+                <h3>📸 Process Gallery</h3>
+                <p class="gallery-description">Visual record of our work during the Hackathon</p>
                 <div class="gallery-grid">
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar1.png')">
-                        <img src="assets/team/sar1.png" alt="Proceso SAR 1" loading="lazy">
+                        <img src="assets/team/sar1.png" alt="SAR Process 1" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar2.png')">
-                        <img src="assets/team/sar2.png" alt="Proceso SAR 2" loading="lazy">
+                        <img src="assets/team/sar2.png" alt="SAR Process 2" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar3.png')">
-                        <img src="assets/team/sar3.png" alt="Proceso SAR 3" loading="lazy">
+                        <img src="assets/team/sar3.png" alt="SAR Process 3" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar4.png')">
-                        <img src="assets/team/sar4.png" alt="Proceso SAR 4" loading="lazy">
+                        <img src="assets/team/sar4.png" alt="SAR Process 4" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar5.png')">
-                        <img src="assets/team/sar5.png" alt="Proceso SAR 5" loading="lazy">
+                        <img src="assets/team/sar5.png" alt="SAR Process 5" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar6.png')">
-                        <img src="assets/team/sar6.png" alt="Proceso SAR 6" loading="lazy">
+                        <img src="assets/team/sar6.png" alt="SAR Process 6" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar7.png')">
-                        <img src="assets/team/sar7.png" alt="Proceso SAR 7" loading="lazy">
+                        <img src="assets/team/sar7.png" alt="SAR Process 7" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar8.png')">
-                        <img src="assets/team/sar8.png" alt="Proceso SAR 8" loading="lazy">
+                        <img src="assets/team/sar8.png" alt="SAR Process 8" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar9.png')">
-                        <img src="assets/team/sar9.png" alt="Proceso SAR 9" loading="lazy">
+                        <img src="assets/team/sar9.png" alt="SAR Process 9" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar10.png')">
-                        <img src="assets/team/sar10.png" alt="Proceso SAR 10" loading="lazy">
+                        <img src="assets/team/sar10.png" alt="SAR Process 10" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar11.png')">
-                        <img src="assets/team/sar11.png" alt="Proceso SAR 11" loading="lazy">
+                        <img src="assets/team/sar11.png" alt="SAR Process 11" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar12.png')">
-                        <img src="assets/team/sar12.png" alt="Proceso SAR 12" loading="lazy">
+                        <img src="assets/team/sar12.png" alt="SAR Process 12" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar13.png')">
-                        <img src="assets/team/sar13.png" alt="Proceso SAR 13" loading="lazy">
+                        <img src="assets/team/sar13.png" alt="SAR Process 13" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar14.png')">
-                        <img src="assets/team/sar14.png" alt="Proceso SAR 14" loading="lazy">
+                        <img src="assets/team/sar14.png" alt="SAR Process 14" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar15.png')">
-                        <img src="assets/team/sar15.png" alt="Proceso SAR 15" loading="lazy">
+                        <img src="assets/team/sar15.png" alt="SAR Process 15" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar16.jpg')">
-                        <img src="assets/team/sar16.jpg" alt="Proceso SAR 16" loading="lazy">
+                        <img src="assets/team/sar16.jpg" alt="SAR Process 16" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar17.png')">
-                        <img src="assets/team/sar17.png" alt="Proceso SAR 17" loading="lazy">
+                        <img src="assets/team/sar17.png" alt="SAR Process 17" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar18.png')">
-                        <img src="assets/team/sar18.png" alt="Proceso SAR 18" loading="lazy">
+                        <img src="assets/team/sar18.png" alt="SAR Process 18" loading="lazy">
                     </div>
                     <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar19.png')">
-                        <img src="assets/team/sar19.png" alt="Proceso SAR 19" loading="lazy">
+                        <img src="assets/team/sar19.png" alt="SAR Process 19" loading="lazy">
                     </div>
                 </div>
 
                 <div class="gallery-note">
-                    <h4>🛰️ Datos Reales de Sentinel-1 Descargados</h4>
+                    <h4>🛰️ Real Sentinel-1 Data Downloaded</h4>
                     <p>
-                        Durante el desarrollo, logramos descargar y procesar datos reales de Sentinel-1 de la NASA para la región de Lima:
+                        During development, we successfully downloaded real Sentinel-1 data from NASA for the Lima region:
                     </p>
                     <ul class="sentinel-files">
                         <li><code>S1A_IW_GRDH_1SDV_20230317T233420_20230317T233449_047690_05BA85_858E.zip</code></li>
@@ -915,16 +913,16 @@ function openTeamModal() {
                         <li><code>S1A_IW_GRDH_1SDV_20230305T233420_20230305T233449_047515_05B499_B198.zip</code></li>
                     </ul>
                     <p>
-                        Estos archivos GeoTIFF de alta resolución demostraron nuestra capacidad para acceder y trabajar con datos SAR reales de NASA.
-                        El procesamiento completo (recorte, proyección y generación de tiles para superposición en mapa) quedó como implementación
-                        futura debido a las limitaciones de tiempo del Hackathon. Dicha información estaba planteada que sea visible al presionar
-                        el botón NASA, permitiendo visualización en tiempo real de datos satelitales oficiales.
+                        These high-resolution GeoTIFF files demonstrated our ability to access and work with real NASA SAR data.
+                        The complete processing (clipping, projection, and tile generation for map overlay) remains as future implementation
+                        due to Hackathon time constraints. This information was planned to be visible by pressing
+                        the NASA button, enabling real-time visualization of official satellite data.
                     </p>
                 </div>
             </div>
 
             <div class="team-footer">
-                <p>🌍 Cambiando el mundo con datos espaciales</p>
+                <p>🌍 Changing the world with space data</p>
             </div>
         </div>
     `;

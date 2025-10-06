@@ -935,20 +935,20 @@ function initializeTimelineSlider() {
                 </div>
                 <div class="data-type-filters">
                     <div class="filter-header">
-                        <span>🔍 Mostrar datos</span>
+                        <span>🔍 Show data</span>
                     </div>
                     <label class="filter-checkbox">
                         <input type="checkbox" id="show-flood" checked>
                         <span class="checkbox-label">
                             <span class="checkbox-icon">🌊</span>
-                            Inundación
+                            Flood
                         </span>
                     </label>
                     <label class="filter-checkbox">
                         <input type="checkbox" id="show-moisture" checked>
                         <span class="checkbox-label">
                             <span class="checkbox-icon">💧</span>
-                            Humedad de suelo
+                            Soil Moisture
                         </span>
                     </label>
                 </div>
@@ -1411,7 +1411,7 @@ function initializeReportButton() {
                     <line x1="12" y1="9" x2="12" y2="13"/>
                     <line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
-                <span>Reportar Zona</span>
+                <span>Report Zone</span>
             `;
 
             L.DomEvent.disableClickPropagation(container);
@@ -1451,7 +1451,7 @@ function initializeTeamButton() {
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
-                <span>Equipo</span>
+                <span>Team</span>
             `;
 
             L.DomEvent.disableClickPropagation(container);
@@ -1665,11 +1665,11 @@ window.centerMapOnCity = async function(cityName) {
             console.log('✅ Ciudad encontrada:', result.label);
         } else {
             console.warn('❌ No se encontraron resultados para:', cityName);
-            showTemporaryNotification(`No se encontró: ${cityName}`);
+            showTemporaryNotification(`Not found: ${cityName}`);
         }
     } catch (error) {
         console.error('Error al buscar ciudad:', error);
-        showTemporaryNotification('Error al realizar la búsqueda');
+        showTemporaryNotification('Error performing search');
     }
 };
 
@@ -1745,24 +1745,24 @@ const LoadingManager = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Inicializar loading manager
+    // Initialize loading manager
     LoadingManager.init();
-    LoadingManager.setStatus('Inicializando aplicación...');
+    LoadingManager.setStatus('Initializing application...');
     LoadingManager.setProgress(10);
 
-    // Verificar que el contenedor del mapa existe
+    // Verify map container exists
     if (!document.getElementById('map-container')) {
         console.error('❌ Contenedor del mapa no encontrado');
         return;
     }
 
-    // PASO 1: Cargar datos históricos inmediatamente (no bloqueante)
-    LoadingManager.addStep('✅ Datos históricos verificados cargados', true);
+    // STEP 1: Load historical data immediately (non-blocking)
+    LoadingManager.addStep('✅ Verified historical data loaded', true);
     LoadingManager.setProgress(30);
 
-    // PASO 2: Inicializar mapa con datos históricos
-    LoadingManager.setStatus('Inicializando mapa interactivo...');
-    LoadingManager.addStep('🗺️ Renderizando mapa de Leaflet...');
+    // STEP 2: Initialize map with historical data
+    LoadingManager.setStatus('Initializing interactive map...');
+    LoadingManager.addStep('🗺️ Rendering Leaflet map...');
 
     // Usar solo datos históricos inicialmente
     if (window.REAL_FLOOD_DATA) {
@@ -1846,37 +1846,37 @@ function setupNASAManualLoad() {
             nasaIcon.className = 'status-icon status-loading';
         }
         if (nasaCountEl) {
-            nasaCountEl.textContent = 'Cargando...';
+            nasaCountEl.textContent = 'Loading...';
         }
 
-        // Mostrar notificación
+        // Show notification
         if (window.showNotification) {
-            window.showNotification('🛰️ Cargando datos de NASA Earthdata...', 'info');
+            window.showNotification('🛰️ Loading NASA Earthdata data...', 'info');
         }
 
         try {
-            // Cargar datos de NASA
+            // Load NASA data
             await initializeSARData();
 
-            // Recargar mapa
+            // Reload map
             console.log('🔄 Actualizando mapa con datos de NASA...');
             loadDataForCurrentZoom();
 
-            // Contar eventos
+            // Count events
             const totalCount = Object.values(SAR_DATA).reduce((sum, arr) => sum + arr.length, 0);
             const historicalCount = window.REAL_FLOOD_DATA ?
                 Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
             const nasaCount = totalCount - historicalCount;
 
-            // Actualizar badge
+            // Update badge
             updateDataStatusBadge(historicalCount, nasaCount);
 
-            // Marcar como cargado
+            // Mark as loaded
             isLoaded = true;
 
-            // Mostrar notificación de éxito
+            // Show success notification
             if (window.showNotification) {
-                window.showNotification(`✅ NASA cargado: ${nasaCount} eventos adicionales`, 'success');
+                window.showNotification(`✅ NASA loaded: ${nasaCount} additional events`, 'success');
             }
 
             console.log(`✅ Carga manual exitosa: ${nasaCount} eventos de NASA`);
@@ -1884,14 +1884,14 @@ function setupNASAManualLoad() {
         } catch (error) {
             console.error('❌ Error en carga manual de NASA:', error);
 
-            // Actualizar badge con error
+            // Update badge with error
             const historicalCount = window.REAL_FLOOD_DATA ?
                 Object.values(window.REAL_FLOOD_DATA).reduce((sum, arr) => sum + arr.length, 0) : 0;
             updateDataStatusBadge(historicalCount, 0, true);
 
-            // Mostrar error al usuario
+            // Show error to user
             if (window.showNotification) {
-                window.showNotification('❌ Error cargando NASA API. Revisa la consola.', 'error');
+                window.showNotification('❌ Error loading NASA API. Check console.', 'error');
             }
 
             console.log('ℹ️ Detalles del error:');
@@ -1947,8 +1947,8 @@ function updateDataStatusBadge(historicalCount, nasaCount, nasaError = false) {
             nasaIcon.className = 'status-icon status-inactive';
         }
         if (nasaCountEl) {
-            nasaCountEl.textContent = 'No disponible';
-            nasaCountEl.title = 'API de NASA no disponible. Usando solo datos históricos verificados.';
+            nasaCountEl.textContent = 'Not available';
+            nasaCountEl.title = 'NASA API not available. Using verified historical data only.';
         }
     } else {
         // Cargado exitosamente
@@ -2080,9 +2080,9 @@ function showNASAPopupModal(events, totalCount, visibleCount) {
             ${events.length === 0 ? `
                 <div style="padding: 2rem; text-align: center;">
                     <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">🔍</p>
-                    <p style="color: var(--text-secondary);">No hay eventos de NASA disponibles</p>
+                    <p style="color: var(--text-secondary);">No NASA events available</p>
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
-                        Verifica que los datos de NASA se hayan cargado correctamente
+                        Verify that NASA data has been loaded correctly
                     </p>
                 </div>
             ` : generateNASAEventsList(events)}

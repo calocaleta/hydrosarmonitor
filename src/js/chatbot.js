@@ -1,127 +1,127 @@
 // ========================================
-// HYDROSAR MONITOR - CHATBOT EDUCATIVO
+// HYDROSAR MONITOR - EDUCATIONAL CHATBOT
 // ========================================
 
-// Base de conocimiento del chatbot
+// Chatbot knowledge base
 const CHATBOT_KNOWLEDGE = [
-    // SAR y Tecnología
+    // SAR and Technology
     {
-        keywords: ['sar', 'imagen sar', 'radar', 'satelite', 'satélite'],
+        keywords: ['sar', 'imagen sar', 'radar', 'satelite', 'satélite', 'satellite', 'synthetic aperture'],
         responses: [
-            'Una imagen SAR (Radar de Apertura Sintética) es una imagen tomada desde satélites que usa radar para ver la superficie de la Tierra, ¡incluso si está nublado o de noche! 🛰️',
-            'SAR significa "Synthetic Aperture Radar". Es una tecnología espacial que nos ayuda a detectar inundaciones y cambios en el terreno sin importar el clima. 📡'
+            'A SAR (Synthetic Aperture Radar) image is an image taken from satellites that uses radar to see Earth\'s surface, even if it\'s cloudy or nighttime! 🛰️',
+            'SAR stands for "Synthetic Aperture Radar". It\'s a space technology that helps us detect floods and terrain changes regardless of weather conditions. 📡'
         ]
     },
     {
-        keywords: ['huayco', 'huaico', 'deslizamiento', 'aluvión'],
+        keywords: ['huayco', 'huaico', 'deslizamiento', 'aluvión', 'debris flow', 'landslide', 'mudslide'],
         responses: [
-            'Un huayco es un flujo violento de agua, lodo y piedras que baja por quebradas. Ocurre por lluvias intensas en zonas montañosas. ⛰️💧',
-            'Los huaycos son muy peligrosos. Si hay alerta en tu zona, mantente alejado de quebradas y ríos, y sigue las indicaciones de las autoridades. 🚨'
+            'A debris flow is a violent flow of water, mud and rocks that descends through ravines. It occurs due to intense rainfall in mountainous areas. ⛰️💧',
+            'Debris flows are very dangerous. If there\'s an alert in your area, stay away from ravines and rivers, and follow authorities\' instructions. 🚨'
         ]
     },
     {
-        keywords: ['zona de riesgo', 'zona riesgo', 'area peligrosa', 'peligro'],
+        keywords: ['zona de riesgo', 'zona riesgo', 'area peligrosa', 'peligro', 'risk zone', 'danger zone', 'hazard'],
         responses: [
-            'Una zona de riesgo es un área donde hay alta probabilidad de inundaciones o huaycos según datos históricos y predicciones meteorológicas. Las marcamos en rojo o naranja en el mapa. 🗺️',
-            'Si ves una zona marcada en rojo en el mapa, significa que hay alto riesgo de eventos como huaycos o inundaciones. ¡Mantente alerta! ⚠️'
+            'A risk zone is an area where there\'s high probability of floods or debris flows based on historical data and weather predictions. We mark them in red or orange on the map. 🗺️',
+            'If you see a zone marked in red on the map, it means there\'s high risk of events like debris flows or floods. Stay alert! ⚠️'
         ]
     },
     {
-        keywords: ['alerta', 'notificación', 'aviso', 'alarma'],
+        keywords: ['alerta', 'notificación', 'aviso', 'alarma', 'alert', 'notification', 'warning'],
         responses: [
-            '¡Recibiste una alerta porque estás cerca de una zona de riesgo! Es importante que sigas las recomendaciones de seguridad y estés atento a las autoridades. 🚨',
-            'Las alertas se activan cuando nuestro sistema detecta que estás en una zona de alto riesgo. Puedes silenciar el sonido, pero mantente informado. 📢'
+            'You received an alert because you\'re near a risk zone! It\'s important that you follow safety recommendations and stay informed from authorities. 🚨',
+            'Alerts are activated when our system detects you\'re in a high-risk zone. You can mute the sound, but stay informed. 📢'
         ]
     },
     {
-        keywords: ['qué hago', 'que hago', 'emergencia', 'evacuar', 'proteger'],
+        keywords: ['qué hago', 'que hago', 'emergencia', 'evacuar', 'proteger', 'what do i do', 'emergency', 'evacuate'],
         responses: [
-            '🆘 En caso de emergencia:\n1. Mantén la calma\n2. Aléjate de quebradas y ríos\n3. Busca zonas altas\n4. Sigue instrucciones de autoridades\n5. Lleva solo lo esencial',
-            'Si hay alerta de huayco: NO cruces ríos crecidos, aléjate de zonas bajas, ten lista una mochila de emergencia y mantente comunicado con tu familia. 📱'
+            '🆘 In case of emergency:\n1. Stay calm\n2. Move away from ravines and rivers\n3. Seek high ground\n4. Follow authorities\' instructions\n5. Take only essentials',
+            'If there\'s a debris flow alert: DO NOT cross swollen rivers, move away from low areas, have an emergency backpack ready and stay in contact with your family. 📱'
         ]
     },
     {
-        keywords: ['lluvia', 'precipitación', 'temporal', 'tormenta'],
+        keywords: ['lluvia', 'precipitación', 'temporal', 'tormenta', 'rain', 'rainfall', 'storm'],
         responses: [
-            'Las lluvias intensas pueden causar inundaciones y huaycos. Nuestro sistema usa datos SAR de NASA para monitorear zonas afectadas históricamente. 🌧️',
-            'Monitoreamos patrones de lluvia desde 2015. Puedes usar el slider temporal en el mapa para ver cómo han cambiado las zonas afectadas. 📊'
+            'Heavy rainfall can cause floods and debris flows. Our system uses NASA SAR data to monitor historically affected zones. 🌧️',
+            'We monitor rainfall patterns since 2015. You can use the timeline slider on the map to see how affected zones have changed. 📊'
         ]
     },
     {
-        keywords: ['nasa', 'espacio', 'satelites'],
+        keywords: ['nasa', 'espacio', 'satelites', 'space', 'satellites'],
         responses: [
-            'Usamos datos de satélites de NASA para detectar inundaciones. Estos satélites orbitan la Tierra tomando imágenes con radar de alta precisión. 🚀',
-            'NASA proporciona datos SAR públicos que nos ayudan a entender mejor los riesgos de inundaciones en nuestras ciudades. ¡Ciencia espacial al servicio de la comunidad! 🌍'
+            'We use NASA satellite data to detect floods. These satellites orbit Earth taking images with high-precision radar. 🚀',
+            'NASA provides public SAR data that helps us better understand flood risks in our cities. Space science serving the community! 🌍'
         ]
     },
     {
-        keywords: ['reportar', 'reporte', 'informar', 'denunciar'],
+        keywords: ['reportar', 'reporte', 'informar', 'denunciar', 'report', 'inform'],
         responses: [
-            'Puedes reportar una zona afectada usando el botón naranja "Reportar zona afectada". Tu reporte ayuda a alertar a otras personas en la comunidad. 📍',
-            '¡Gracias por querer ayudar! Usa el botón de reporte para informar sobre situaciones de riesgo. Incluye una descripción clara de lo que observas. 📝'
+            'You can report an affected area using the orange "Report affected area" button. Your report helps alert other people in the community. 📍',
+            'Thanks for wanting to help! Use the report button to inform about risk situations. Include a clear description of what you observe. 📝'
         ]
     },
     {
-        keywords: ['mapa', 'ubicación', 'ciudad', 'buscar'],
+        keywords: ['mapa', 'ubicación', 'ciudad', 'buscar', 'map', 'location', 'city', 'search'],
         responses: [
-            'Puedes buscar cualquier ciudad usando la barra de búsqueda en el mapa. El mapa te mostrará zonas de riesgo y datos históricos de lluvia. 🔍',
-            'Para navegar el mapa: usa el zoom (+/-), el slider temporal para ver diferentes años, y los controles de capas para mostrar u ocultar información. 🗺️'
+            'You can search any city using the search bar on the map. The map will show you risk zones and historical rainfall data. 🔍',
+            'To navigate the map: use zoom (+/-), the timeline slider to see different years, and layer controls to show or hide information. 🗺️'
         ]
     },
     {
-        keywords: ['predicción', 'ia', 'inteligencia artificial', 'futuro'],
+        keywords: ['predicción', 'ia', 'inteligencia artificial', 'futuro', 'prediction', 'ai', 'artificial intelligence', 'future'],
         responses: [
-            'Nuestro modo Predicción IA analiza patrones históricos para estimar zonas de riesgo en los próximos 7 días. ¡Actívalo desde el botón en el mapa! 🤖',
-            'La IA analiza años de datos SAR para predecir dónde podrían ocurrir eventos futuros. Es una herramienta de prevención basada en ciencia. 📈'
+            'Our AI Prediction mode analyzes historical patterns to estimate risk zones for the next 7 days. Activate it from the button on the map! 🤖',
+            'The AI analyzes years of SAR data to predict where future events might occur. It\'s a prevention tool based on science. 📈'
         ]
     },
     {
-        keywords: ['ayuda', 'help', 'asistencia', 'soporte'],
+        keywords: ['ayuda', 'help', 'asistencia', 'soporte', 'assistance', 'support'],
         responses: [
-            '¡Estoy aquí para ayudarte! Puedo explicarte sobre:\n• Imágenes SAR\n• Zonas de riesgo\n• Qué hacer en emergencias\n• Cómo usar el mapa\n¿Qué te gustaría saber? 😊',
-            'Puedo ayudarte a entender mejor nuestra plataforma. Pregúntame sobre huaycos, alertas, el mapa, o cualquier duda sobre seguridad. 💬'
+            'I\'m here to help! I can explain about:\n• SAR Images\n• Risk zones\n• What to do in emergencies\n• How to use the map\nWhat would you like to know? 😊',
+            'I can help you better understand our platform. Ask me about debris flows, alerts, the map, or any safety questions. 💬'
         ]
     },
     {
-        keywords: ['gracias', 'genial', 'excelente', 'bien', 'ok'],
+        keywords: ['gracias', 'genial', 'excelente', 'bien', 'ok', 'thanks', 'thank you', 'great', 'excellent', 'good'],
         responses: [
-            '¡De nada! Estoy aquí para ayudarte a mantenerte seguro. 😊',
-            '¡Me alegra poder ayudarte! Recuerda revisar el mapa regularmente. 🙌',
-            '¡Perfecto! Si tienes más preguntas, aquí estaré. 💙'
+            'You\'re welcome! I\'m here to help you stay safe. 😊',
+            'I\'m glad I could help! Remember to check the map regularly. 🙌',
+            'Perfect! If you have more questions, I\'ll be here. 💙'
         ]
     },
     {
-        keywords: ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'hi', 'hello'],
+        keywords: ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'hi', 'hello', 'hey'],
         responses: [
-            '¡Hola! 👋 Soy tu asistente virtual de HydroSAR Monitor. ¿En qué puedo ayudarte hoy?',
-            '¡Bienvenido! Estoy aquí para responder tus preguntas sobre alertas de lluvia, huaycos y seguridad. ¿Qué quieres saber? 😊'
+            'Hello! 👋 I\'m your HydroSAR Monitor virtual assistant. How can I help you today?',
+            'Welcome! I\'m here to answer your questions about rainfall alerts, debris flows and safety. What would you like to know? 😊'
         ]
     },
     {
-        keywords: ['juego', 'gotas', 'puntos', 'recolectar'],
+        keywords: ['juego', 'gotas', 'puntos', 'recolectar', 'game', 'drops', 'points', 'collect'],
         responses: [
-            '¡El juego "Caza Gotas" te ayuda a aprender sobre zonas de lluvia! Recolecta gotas azules en el mapa para desbloquear información histórica. 💧',
-            'Cada gota que recolectas representa datos reales de lluvia. ¡Es educación ambiental divertida! Intenta recolectar 5 gotas. 🎮'
+            'The "Drop Hunter" game helps you learn about rainfall zones! Collect blue drops on the map to unlock historical information. 💧',
+            'Each drop you collect represents real rainfall data. It\'s fun environmental education! Try to collect 5 drops. 🎮'
         ]
     }
 ];
 
-// Respuestas por defecto
+// Default responses
 const DEFAULT_RESPONSES = [
-    'Mmm, no estoy seguro de cómo responder eso. ¿Podrías preguntarlo de otra manera? 🤔',
-    'Interesante pregunta. Intenta preguntar sobre: SAR, huaycos, zonas de riesgo, alertas o emergencias. 💡',
-    'No tengo información específica sobre eso, pero puedo ayudarte con temas de seguridad, mapas y alertas meteorológicas. 📚'
+    'Hmm, I\'m not sure how to answer that. Could you ask it in a different way? 🤔',
+    'Interesting question. Try asking about: SAR, debris flows, risk zones, alerts or emergencies. 💡',
+    'I don\'t have specific information about that, but I can help you with safety topics, maps and weather alerts. 📚'
 ];
 
-// Mensajes de bienvenida
+// Welcome messages
 const WELCOME_MESSAGES = [
     {
-        text: '¡Hola! Soy tu asistente virtual de HydroSAR Monitor 🤖',
+        text: 'Hello! I\'m your HydroSAR Monitor virtual assistant 🤖',
         isBot: true,
         timestamp: new Date()
     },
     {
-        text: 'Puedo ayudarte a entender las alertas, el mapa y qué hacer en caso de emergencia. ¿Qué te gustaría saber? 💬',
+        text: 'I can help you understand the alerts, the map and what to do in case of emergency. What would you like to know? 💬',
         isBot: true,
         timestamp: new Date()
     }

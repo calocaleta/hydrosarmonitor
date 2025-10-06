@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Consulta el historial de lluvias e inundaciones en tu localidad">
+    <meta name="description" content="Check the history of rainfall and floods in your area">
     <title>HydroSAR Monitor</title>
 
     <!-- Fuente amigable de Google Fonts -->
@@ -49,13 +49,13 @@
                 <div class="water-drop"></div>
                 <div class="water-drop"></div>
             </div>
-            <p class="loading-status" id="loading-status">Inicializando...</p>
+            <p class="loading-status" id="loading-status">Initializing...</p>
             <div class="loading-progress-bar">
                 <div class="loading-progress-fill" id="loading-progress"></div>
             </div>
             <p class="loading-timer" id="loading-timer">0.0s</p>
             <div class="loading-details" id="loading-details">
-                <p class="loading-step">⏳ Cargando componentes...</p>
+                <p class="loading-step">⏳ Loading components...</p>
             </div>
         </div>
     </div>
@@ -77,7 +77,7 @@
         <!-- Panel de controles (tema y color) -->
         <div class="controls">
             <!-- Botón de tema claro/oscuro -->
-            <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+            <button class="theme-toggle" id="themeToggle" aria-label="Change theme">
                 <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="5"></circle>
                     <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -96,9 +96,9 @@
 
             <!-- Selector de paleta de colores -->
             <div class="color-selector">
-                <button class="color-option" data-scheme="blue" aria-label="Esquema azul"></button>
-                <button class="color-option" data-scheme="green" aria-label="Esquema verde"></button>
-                <button class="color-option" data-scheme="purple" aria-label="Esquema morado"></button>
+                <button class="color-option" data-scheme="blue" aria-label="Blue scheme"></button>
+                <button class="color-option" data-scheme="green" aria-label="Green scheme"></button>
+                <button class="color-option" data-scheme="purple" aria-label="Purple scheme"></button>
             </div>
         </div>
 
@@ -113,39 +113,39 @@
             </h1>
             <p class="subtitle">Rainfall & Flood Risk Radar Platform</p>
 
-            <!-- Descripción -->
+            <!-- Description -->
             <p class="description">
-                Consulta si esta zona fue afectada por lluvias o inundaciones en los últimos 10 años.
+                Check if this area was affected by rainfall or floods in the last 10 years.
             </p>
 
             <!-- Data Status Badge -->
             <div class="data-status-badge" id="data-status-badge">
                 <div class="status-item">
                     <span class="status-icon status-active" id="status-icon-historical"></span>
-                    <span class="status-label">Históricos: <strong id="status-count-historical">-</strong></span>
+                    <span class="status-label">Historical: <strong id="status-count-historical">-</strong></span>
                 </div>
-                <div class="status-item clickable" id="nasa-status-item" title="Click para cargar datos de NASA">
+                <div class="status-item clickable" id="nasa-status-item" title="Click to load NASA data">
                     <span class="status-icon status-loading" id="status-icon-nasa"></span>
-                    <span class="status-label">NASA: <strong id="status-count-nasa">Click para cargar</strong></span>
+                    <span class="status-label">NASA: <strong id="status-count-nasa">Click to load</strong></span>
                 </div>
             </div>
 
-            <!-- Formulario de búsqueda -->
+            <!-- Search Form -->
             <form class="search-form" id="searchForm">
                 <div class="input-group">
-                    <label for="cityInput" class="input-label">Ingresa tu ciudad:</label>
+                    <label for="cityInput" class="input-label">Enter your city:</label>
                     <input
                         type="text"
                         id="cityInput"
                         class="city-input"
-                        placeholder="Ej: Lima, Perú"
-                        aria-label="Ingresa el nombre de la ciudad"
+                        placeholder="E.g.: Lima, Peru"
+                        aria-label="Enter city name"
                         required
                     >
                 </div>
 
                 <button type="submit" class="search-button">
-                    <!-- Ícono de lluvia animado -->
+                    <!-- Animated rain icon -->
                     <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="8" y1="19" x2="8" y2="21"></line>
                         <line x1="8" y1="13" x2="8" y2="15"></line>
@@ -155,7 +155,7 @@
                         <line x1="12" y1="15" x2="12" y2="17"></line>
                         <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"></path>
                     </svg>
-                    Consultar historial
+                    Check history
                 </button>
             </form>
 
