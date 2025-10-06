@@ -30,7 +30,7 @@ let cumulativeMode = true; // Modo acumulado activado por defecto
 let minHumidityThreshold = 0.8; // Umbral mínimo de humedad (80% por defecto)
 let currentOpenPopup = null; // Trackear popup abierto actualmente
 let showFloodData = true; // Mostrar inundaciones (activo por defecto)
-let showMoistureData = false; // Mostrar humedad (inactivo por defecto)
+let showMoistureData = true; // Mostrar humedad de suelo (activo por defecto)
 
 // Configuración de niveles de detalle (LOD) - Los tamaños ahora se calculan dinámicamente
 const LOD_CONFIG = {
@@ -203,6 +203,7 @@ function initializeMap() {
     initializePredictionButton();
     initializeAIHelpButton();
     initializeReportButton();
+    initializeTeamButton();
 
     // Event listeners para cargar datos cuando el mapa se mueve
     addMapMovementListeners();
@@ -944,7 +945,7 @@ function initializeTimelineSlider() {
                         </span>
                     </label>
                     <label class="filter-checkbox">
-                        <input type="checkbox" id="show-moisture">
+                        <input type="checkbox" id="show-moisture" checked>
                         <span class="checkbox-label">
                             <span class="checkbox-icon">💧</span>
                             Humedad de suelo
@@ -1428,6 +1429,46 @@ function initializeReportButton() {
     });
 
     map.addControl(new reportControl());
+}
+
+/**
+ * Inicializa el botón de Equipo 2G
+ */
+function initializeTeamButton() {
+    const teamControl = L.Control.extend({
+        options: {
+            position: 'topleft'
+        },
+        onAdd: function(map) {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control team-control');
+
+            const button = L.DomUtil.create('button', 'team-button', container);
+            button.id = 'team-toggle';
+            button.innerHTML = `
+                <svg class="team-icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <span>Equipo</span>
+            `;
+
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.on(button, 'click', function() {
+                // Abrir modal de equipo (función definida en alerts.js)
+                if (typeof openTeamModal === 'function') {
+                    openTeamModal();
+                } else {
+                    console.warn('Modal de equipo no disponible');
+                }
+            });
+
+            return container;
+        }
+    });
+
+    map.addControl(new teamControl());
 }
 
 // ========================================

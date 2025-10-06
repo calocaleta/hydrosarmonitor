@@ -81,13 +81,16 @@ function initializeAlertSystem() {
     // Crear botón flotante de reporte (deshabilitado - ahora está en el mapa)
     // createReportButton();
 
-    // Verificar alertas periódicamente
-    setInterval(checkUserInRiskZone, ALERT_CONFIG.checkInterval);
+    // Crear botón flotante de equipo (deshabilitado - ahora está en el mapa)
+    // createTeamButton();
 
-    // Verificación inicial después de 3 segundos
-    setTimeout(checkUserInRiskZone, 3000);
+    // Verificar alertas periódicamente (deshabilitado)
+    // setInterval(checkUserInRiskZone, ALERT_CONFIG.checkInterval);
 
-    console.log('✅ Sistema de alertas inicializado');
+    // Verificación inicial después de 3 segundos (deshabilitado)
+    // setTimeout(checkUserInRiskZone, 3000);
+
+    console.log('✅ Sistema de alertas inicializado (alertas meteorológicas desactivadas)');
 }
 
 // ========================================
@@ -515,6 +518,21 @@ function createReportButton() {
 }
 
 /**
+ * Crea el botón flotante de equipo debajo del botón de reporte
+ */
+function createTeamButton() {
+    const button = document.createElement('button');
+    button.className = 'team-floating-button';
+    button.innerHTML = `
+        <span class="team-icon">👥</span>
+        <span class="team-text">Equipo</span>
+    `;
+    button.onclick = openTeamModal;
+
+    document.body.appendChild(button);
+}
+
+/**
  * Abre el formulario de reporte
  */
 function openReportForm() {
@@ -720,6 +738,208 @@ function addReportMarker(report) {
 }
 
 // ========================================
+// EQUIPO - MODAL
+// ========================================
+
+/**
+ * Abre el modal del equipo 2G - Two Generations
+ */
+function openTeamModal() {
+    // Verificar si ya existe
+    if (document.getElementById('team-modal')) {
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'team-modal';
+    modal.id = 'team-modal';
+
+    modal.innerHTML = `
+        <div class="team-modal-content">
+            <button class="team-close-btn" onclick="closeTeamModal()">×</button>
+
+            <div class="team-header">
+                <h2>🚀 Equipo 2G - Two Generations</h2>
+                <p class="team-subtitle">NASA Space Apps Challenge 2024</p>
+            </div>
+
+            <div class="team-motivation">
+                <h3>💡 Nuestra Motivación</h3>
+                <p>
+                    Somos 2G — TWO GENERATIONS.<br><br>
+                    Nuestro equipo une a participantes de dos generaciones distintas, donde conviven el pensamiento fresco,
+                    tecnológico y disruptivo con el conocimiento acumulado, la experiencia probada y la visión estratégica.
+                    Esta sinergia nos permite abordar problemas complejos con velocidad y creatividad, pero también con
+                    disciplina y método.<br><br>
+                    Trabajamos para que los datos espaciales abiertos se conviertan en soluciones útiles, reproducibles y
+                    científicamente sólidas, generando impacto tangible en la exploración, la gestión de recursos y la
+                    innovación tecnológica. Creemos que la ciencia avanza más rápido cuando distintas generaciones colaboran,
+                    porque cada época aporta fortalezas únicas. Nuestro propósito es claro: cambiar el mundo con conocimiento,
+                    rigor y pasión compartida por la ciencia.
+                </p>
+            </div>
+
+            <div class="team-members">
+                <h3>👥 Integrantes del Equipo</h3>
+
+                <div class="team-member">
+                    <div class="member-photo">
+                        <img src="assets/team/cgg.jpg" alt="Carlos A. Garcia Gonzales">
+                    </div>
+                    <div class="member-info">
+                        <h4>Carlos A. Garcia Gonzales</h4>
+                        <p class="member-role">Líder del Proyecto / Scrum Master</p>
+                    </div>
+                </div>
+
+                <div class="team-member">
+                    <div class="member-photo">
+                        <img src="assets/team/cgp.jpg" alt="Carlos Gabriel Garcia Pocore">
+                    </div>
+                    <div class="member-info">
+                        <h4>Carlos Gabriel Garcia Pocore</h4>
+                        <p class="member-role">Software Developer / Conocedor de SAR</p>
+                    </div>
+                </div>
+
+                <div class="team-member">
+                    <div class="member-photo">
+                        <img src="assets/team/mpt.jpg" alt="Marali R. Pocore Tueros">
+                    </div>
+                    <div class="member-info">
+                        <h4>Marali R. Pocore Tueros</h4>
+                        <p class="member-role">Product Owner</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-methodology">
+                <h3>🎯 Nuestra Metodología</h3>
+                <div class="methodology-content">
+                    <div class="methodology-item">
+                        <div class="methodology-icon">💡</div>
+                        <div class="methodology-text">
+                            <h4>Design Thinking</h4>
+                            <p>Utilizamos Design Thinking para identificar el problema real y proponer una solución óptima que se presenta a través de este aplicativo.</p>
+                        </div>
+                    </div>
+                    <div class="methodology-item">
+                        <div class="methodology-icon">🚀</div>
+                        <div class="methodology-text">
+                            <h4>SCRUM para Hackathon</h4>
+                            <p>Trabajamos con metodología SCRUM orientada a Hackathon, permitiendo iteraciones rápidas y entrega continua de valor.</p>
+                        </div>
+                    </div>
+                    <div class="methodology-item">
+                        <div class="methodology-icon">👨‍🏫</div>
+                        <div class="methodology-text">
+                            <h4>Asesoría Especializada</h4>
+                            <p>Contamos con asesoría especializada facilitada por el comité de la Hackathon NASA Space Apps Challenge 2024.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-gallery">
+                <h3>📸 Galería del Proceso</h3>
+                <p class="gallery-description">Registro visual de nuestro trabajo durante la Hackathon</p>
+                <div class="gallery-grid">
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar1.png')">
+                        <img src="assets/team/sar1.png" alt="Proceso SAR 1" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar2.png')">
+                        <img src="assets/team/sar2.png" alt="Proceso SAR 2" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar3.png')">
+                        <img src="assets/team/sar3.png" alt="Proceso SAR 3" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar4.png')">
+                        <img src="assets/team/sar4.png" alt="Proceso SAR 4" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar5.png')">
+                        <img src="assets/team/sar5.png" alt="Proceso SAR 5" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar6.png')">
+                        <img src="assets/team/sar6.png" alt="Proceso SAR 6" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar7.png')">
+                        <img src="assets/team/sar7.png" alt="Proceso SAR 7" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar8.png')">
+                        <img src="assets/team/sar8.png" alt="Proceso SAR 8" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar9.png')">
+                        <img src="assets/team/sar9.png" alt="Proceso SAR 9" loading="lazy">
+                    </div>
+                    <div class="gallery-item" onclick="window.openGalleryImage('assets/team/sar10.png')">
+                        <img src="assets/team/sar10.png" alt="Proceso SAR 10" loading="lazy">
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-footer">
+                <p>🌍 Cambiando el mundo con datos espaciales</p>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Cerrar al hacer click fuera del modal
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeTeamModal();
+        }
+    });
+}
+
+/**
+ * Cierra el modal del equipo
+ */
+function closeTeamModal() {
+    const modal = document.getElementById('team-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+/**
+ * Abre una imagen de la galería en tamaño completo
+ */
+function openGalleryImage(imageSrc) {
+    // Crear modal de imagen
+    const imageModal = document.createElement('div');
+    imageModal.className = 'gallery-image-modal';
+    imageModal.id = 'gallery-image-modal';
+
+    imageModal.innerHTML = `
+        <div class="gallery-image-content">
+            <button class="gallery-close-btn" onclick="closeGalleryImage()">×</button>
+            <img src="${imageSrc}" alt="Imagen del proceso">
+        </div>
+    `;
+
+    document.body.appendChild(imageModal);
+
+    // Cerrar al hacer click fuera de la imagen
+    imageModal.addEventListener('click', (e) => {
+        if (e.target === imageModal) {
+            closeGalleryImage();
+        }
+    });
+}
+
+/**
+ * Cierra el modal de imagen de la galería
+ */
+function closeGalleryImage() {
+    const modal = document.getElementById('gallery-image-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// ========================================
 // UTILIDADES
 // ========================================
 
@@ -800,5 +1020,9 @@ window.closeReportForm = closeReportForm;
 window.submitReport = submitReport;
 window.refreshLocation = refreshLocation;
 window.shareRiskZone = shareRiskZone;
+window.openTeamModal = openTeamModal;
+window.closeTeamModal = closeTeamModal;
+window.openGalleryImage = openGalleryImage;
+window.closeGalleryImage = closeGalleryImage;
 
 console.log('🚨 Módulo de alertas cargado');
